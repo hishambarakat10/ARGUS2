@@ -88,7 +88,7 @@ def home():
 
 @app.route("/run_notebook")
 def run_notebook():
-    file_path = r"/home/capstone/cap_project/ARGUS-main/ARGUS/message.json"  # Update this path if needed
+    file_path = r"/var/log/suricata/fast.log"  # Update this path if needed
 
     df = extract_data(file_path)
     if df is None or df.empty:
