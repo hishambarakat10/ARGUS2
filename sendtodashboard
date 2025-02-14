@@ -1,4 +1,12 @@
- Directory where Suricata logs are stored
+import os
+import json
+import requests
+import re
+import time
+import socket
+import psutil  # Import for CPU usage
+
+Directory where Suricata logs are stored
 LOG_DIR = "/var/log/suricata"
 LOG_FILE = "fast.log"
 
