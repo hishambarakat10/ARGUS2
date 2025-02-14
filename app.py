@@ -12,34 +12,21 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 LOG_DIR = "/var/log/suricata"
-LOG_FILE = "eve.json"
+LOG_FILE = "fast.log"  # Assuming the log file is named eve.log
 
 # Function to extract data from JSON logs
 def extract_data(file_path):
     try:
         data = {'timestamp': [], 'event_id': [], 'classification': []}
         with open(file_path, 'r') as file:
-            json_data = []
-            current_json = ""
-
             for line in file:
-                if line.startswith("Received Log: {"):
-                    current_json = line[len("Received Log: "):].strip()
-                elif line.strip() == "}":
-                    current_json += line.strip()
-                    json_data.append(current_json)
-                    current_json = ""
-                elif current_json:
-                    current_json += line.strip()
-
-            for json_str in json_data:
                 try:
-                    log_data = json.loads(json_str)
+                    log_data = json.loads(line.strip())
                     data['timestamp'].append(log_data['timestamp'])
                     data['event_id'].append(log_data['event_id'])
                     data['classification'].append(log_data['classification'])
                 except json.JSONDecodeError as e:
-                    print(f"Error decoding JSON in line: {json_str}")
+                    print(f"Error decoding JSON in line: {line.strip()}")
                     print(f"Error: {e}")
 
         return pd.DataFrame(data)
@@ -88,9 +75,11 @@ def home():
 @app.route("/run_notebook")
 def run_notebook():
     file_path = os.path.join(LOG_DIR, LOG_FILE)
+    print(f"Reading data from: {file_path}")  # Debugging statement
 
     df = extract_data(file_path)
     if df is None or df.empty:
+        print("No data found or file not available.")  # Debugging statement
         return "No data found or file not available."
 
     # Generate charts
@@ -147,7 +136,7 @@ def update_charts():
 
 def monitor_logs():
     """
-    Continuously reads the Suricata eve.json file and sends parsed entries to the dashboard.
+    Continuously reads the Suricata eve.log file and sends parsed entries to the dashboard.
     """
     file_path = os.path.join(LOG_DIR, LOG_FILE)
     with open(file_path, 'r') as file:
@@ -159,8 +148,13 @@ def monitor_logs():
                 continue
 
             # Process the new log line
-            log_entry = json.loads(line.strip())
-            # Here you can process the log_entry if needed
+            try:
+                log_entry = json.loads(line.strip())
+                # Here you can process the log_entry if needed
+                print(f"New log entry: {log_entry}")  # Debugging statement
+            except json.JSONDecodeError as e:
+                print(f"Error decoding JSON in line: {line.strip()}")  # Debugging statement
+                print(f"Error: {e}")
 
             # Update charts with new data
             update_charts()
