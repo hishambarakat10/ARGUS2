@@ -12,9 +12,8 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 LOG_DIR = "/var/log/suricata"
-LOG_FILE = "fast.log"  # Assuming the log file is named eve.log
+LOG_FILE = "fast.log"  # Adjust this to match your actual log file name if needed
 
-# Function to extract data from JSON logs
 def extract_data(file_path):
     try:
         data = {'timestamp': [], 'event_id': [], 'classification': []}
@@ -28,9 +27,7 @@ def extract_data(file_path):
                 except json.JSONDecodeError as e:
                     print(f"Error decoding JSON in line: {line.strip()}")
                     print(f"Error: {e}")
-
         return pd.DataFrame(data)
-
     except FileNotFoundError:
         print(f"Error: File not found at {file_path}")
         return None
@@ -38,20 +35,17 @@ def extract_data(file_path):
         print(f"An error occurred: {e}")
         return None
 
-# Function to generate pie chart
 def generate_pie_chart(df):
     classification_counts = df['classification'].value_counts()
     plt.figure(figsize=(8, 8))
     plt.pie(classification_counts, labels=classification_counts.index, autopct='%1.1f%%', startangle=90)
     plt.title('Classification Distribution')
-
-    # Convert plot to base64 string
     img_io = io.BytesIO()
     plt.savefig(img_io, format='png')
+    plt.close()
     img_io.seek(0)
     return base64.b64encode(img_io.getvalue()).decode()
 
-# Function to generate bar chart
 def generate_bar_chart(df):
     classification_counts = df['classification'].value_counts()
     plt.figure(figsize=(10, 6))
@@ -61,10 +55,9 @@ def generate_bar_chart(df):
     plt.title('Classification Distribution')
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
-
-    # Convert plot to base64 string
     img_io = io.BytesIO()
     plt.savefig(img_io, format='png')
+    plt.close()
     img_io.seek(0)
     return base64.b64encode(img_io.getvalue()).decode()
 
@@ -75,33 +68,18 @@ def home():
 @app.route("/run_notebook")
 def run_notebook():
     file_path = os.path.join(LOG_DIR, LOG_FILE)
-    print(f"Reading data from: {file_path}")  # Debugging statement
-
     df = extract_data(file_path)
     if df is None or df.empty:
-        print("No data found or file not available.")  # Debugging statement
         return "No data found or file not available."
-
-    # Generate charts
+    
     pie_chart = generate_pie_chart(df)
     bar_chart = generate_bar_chart(df)
-
-    # Convert DataFrame to HTML table
     table_html = df.to_html(classes="table table-striped", index=False)
 
-    # Render results in HTML
     html_template = f"""
     <html>
     <head>
-        <title>Notebook Output</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; text-align: center; }}
-            .container {{ max-width: 900px; margin: auto; }}
-            img {{ max-width: 100%; height: auto; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th, td {{ border: 1px solid black; padding: 8px; text-align: left; }}
-            th {{ background-color: #f2f2f2; }}
-        </style>
+        <title>Real Time Dashboard</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
         <script type="text/javascript">
             var socket = io();
@@ -112,15 +90,12 @@ def run_notebook():
         </script>
     </head>
     <body>
-        <div class="container">
-            <h1>Executed Notebook Output</h1>
-            <h2>Extracted Data</h2>
-            {table_html}
-            <h2>Pie Chart</h2>
-            <img id="pie_chart" src="data:image/png;base64,{pie_chart}" alt="Pie Chart">
-            <h2>Bar Chart</h2>
-            <img id="bar_chart" src="data:image/png;base64,{bar_chart}" alt="Bar Chart">
-        </div>
+        <h1>Real Time Dashboard</h1>
+        {table_html}
+        <h2>Pie Chart</h2>
+        <img id="pie_chart" src="data:image/png;base64,{pie_chart}" alt="Pie Chart">
+        <h2>Bar Chart</h2>
+        <img id="bar_chart" src="data:image/png;base64,{bar_chart}" alt="Bar Chart">
     </body>
     </html>
     """
@@ -135,30 +110,25 @@ def update_charts():
         socketio.emit('update_charts', {'pie_chart': pie_chart, 'bar_chart': bar_chart})
 
 def monitor_logs():
-    """
-    Continuously reads the Suricata eve.log file and sends parsed entries to the dashboard.
-    """
     file_path = os.path.join(LOG_DIR, LOG_FILE)
+    while not os.path.exists(file_path):
+        print(f"Waiting for log file {file_path} to be created...")
+        time.sleep(5)
     with open(file_path, 'r') as file:
-        file.seek(0, os.SEEK_END)  # Move to the end of the file
+        file.seek(0, os.SEEK_END)
         while True:
             line = file.readline()
             if not line:
-                time.sleep(1)  # Sleep briefly to avoid busy-waiting
+                time.sleep(1)
                 continue
-
-            # Process the new log line
             try:
                 log_entry = json.loads(line.strip())
-                # Here you can process the log_entry if needed
-                print(f"New log entry: {log_entry}")  # Debugging statement
+                print(f"New log entry: {log_entry}")
             except json.JSONDecodeError as e:
-                print(f"Error decoding JSON in line: {line.strip()}")  # Debugging statement
+                print(f"Error decoding JSON in line: {line.strip()}")
                 print(f"Error: {e}")
-
-            # Update charts with new data
             update_charts()
 
 if __name__ == "__main__":
+    socketio.start_background_task(monitor_logs)
     socketio.run(app, debug=True)
-    monitor_logs()
