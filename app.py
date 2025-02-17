@@ -12,7 +12,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 LOG_DIR = "/var/log/suricata"
-LOG_FILE = "fast.log"  # Adjust this to match your actual log file name if needed
+LOG_FILE = "eve.json"  # Adjust this to match your actual log file name if needed
 
 def extract_data(file_path):
     try:
