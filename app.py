@@ -9,7 +9,7 @@ import base64
 import time
 import socket
 import psutil
-from flask import Flask, render_template_string
+from flask import Flask, request, jsonify, render_template_string
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
@@ -21,6 +21,7 @@ LOG_FILE = "fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 CPU_API_URL = "http://127.0.0.1:5000/api/cpu"
 DEVICE_NAME = socket.gethostname()
+logs = []  # Store received logs
 
 def extract_data(file_path):
     try:
@@ -42,6 +43,14 @@ def extract_data(file_path):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
+@app.route("/api/logs", methods=['GET'])
+def get_logs():
+    file_path = os.path.join(LOG_DIR, LOG_FILE)
+    df = extract_data(file_path)
+    if df is None or df.empty:
+        return jsonify({"error": "No logs found"}), 404
+    return df.to_json(orient="records")
 
 def send_to_dashboard(data, url):
     try:
@@ -122,14 +131,6 @@ def run_notebook():
     </html>
     """
     return render_template_string(html_template)
-
-def update_charts():
-    file_path = os.path.join(LOG_DIR, LOG_FILE)
-    df = extract_data(file_path)
-    if df is not None and not df.empty:
-        pie_chart = generate_pie_chart(df)
-        line_chart = generate_line_chart(df)
-        socketio.emit('update_charts', {'pie_chart': pie_chart, 'line_chart': line_chart})
 
 def monitor_logs():
     while True:
