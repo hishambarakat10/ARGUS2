@@ -16,15 +16,16 @@ LOG_FILE = "fast.log"
 
 def extract_data(file_path):
     try:
-        data = {'event_id': [], 'classification': []}
-        pattern = re.compile(r"^\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+  \[\*\*] \[1:(\d+):\d+] .*? \[\*\*] \[Classification: ([^]]+)]")
+        data = {'timestamp': [], 'event_id': [], 'classification': []}
+        pattern = re.compile(r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)  \[\*\*] \[1:(\d+):\d+] .*? \[\*\*] \[Classification: ([^]]+)]")
         
         with open(file_path, 'r') as file:
             for line in file:
                 match = pattern.search(line)
                 if match:
-                    data['event_id'].append(match.group(1))
-                    data['classification'].append(match.group(2))
+                    data['timestamp'].append(match.group(1))
+                    data['event_id'].append(match.group(2))
+                    data['classification'].append(match.group(3))
         
         return pd.DataFrame(data)
     except FileNotFoundError:
@@ -46,11 +47,15 @@ def generate_pie_chart(df):
     return base64.b64encode(img_io.getvalue()).decode()
 
 def generate_bar_chart(df):
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['alert_count'] = 1
+    df_grouped = df.groupby(df['timestamp'].dt.floor('T')).count()
+    
     plt.figure(figsize=(12, 6))
-    plt.bar(df['event_id'], df['classification'], alpha=0.7)
-    plt.xlabel('Event ID')
-    plt.ylabel('Classification')
-    plt.title('Event ID vs Classification')
+    plt.plot(df_grouped.index, df_grouped['alert_count'], marker='o', linestyle='-')
+    plt.xlabel('Timestamp')
+    plt.ylabel('Number of Alerts')
+    plt.title('Alerts Over Time')
     plt.xticks(rotation=90, ha='right')
     plt.tight_layout()
     img_io = io.BytesIO()
