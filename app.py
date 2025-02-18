@@ -1,10 +1,14 @@
 import os
 import re
+import json
+import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import base64
 import time
+import socket
+import psutil
 from flask import Flask, render_template_string
 from flask_socketio import SocketIO, emit
 
@@ -13,6 +17,10 @@ socketio = SocketIO(app)
 
 LOG_DIR = "/var/log/suricata"
 LOG_FILE = "fast.log"
+
+LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
+CPU_API_URL = "http://127.0.0.1:5000/api/cpu"
+DEVICE_NAME = socket.gethostname()
 
 def extract_data(file_path):
     try:
@@ -35,6 +43,23 @@ def extract_data(file_path):
         print(f"An error occurred: {e}")
         return None
 
+def send_to_dashboard(data, url):
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()
+        print(f"Data sent successfully to {url}:", data)
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to send data to {url}:", e)
+
+def send_cpu_data():
+    cpu_data = {
+        "device_name": DEVICE_NAME,
+        "cpu_usage": psutil.cpu_percent(interval=1),
+        "cpu_cores": psutil.cpu_count(logical=True),
+        "per_core_usage": psutil.cpu_percent(interval=1, percpu=True)
+    }
+    send_to_dashboard(cpu_data, CPU_API_URL)
+
 def generate_pie_chart(df):
     classification_counts = df['classification'].value_counts()
     plt.figure(figsize=(8, 8))
@@ -46,7 +71,7 @@ def generate_pie_chart(df):
     img_io.seek(0)
     return base64.b64encode(img_io.getvalue()).decode()
 
-def generate_bar_chart(df):
+def generate_line_chart(df):
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df['alert_count'] = 1
     df_grouped = df.groupby(df['timestamp'].dt.floor('T')).count()
@@ -72,7 +97,7 @@ def run_notebook():
         return "No data found or file not available."
     
     pie_chart = generate_pie_chart(df)
-    bar_chart = generate_bar_chart(df)
+    line_chart = generate_line_chart(df)
 
     html_template = f"""
     <html>
@@ -83,14 +108,16 @@ def run_notebook():
             var socket = io();
             socket.on('update_charts', function(data) {{
                 document.getElementById('pie_chart').src = 'data:image/png;base64,' + data.pie_chart;
-                document.getElementById('bar_chart').src = 'data:image/png;base64,' + data.bar_chart;
+                document.getElementById('line_chart').src = 'data:image/png;base64,' + data.line_chart;
             }});
         </script>
     </head>
     <body>
         <h1>Real Time Dashboard</h1>
-        <img id="pie_chart" src="data:image/png;base64,{pie_chart}>
-        <img id="bar_chart" src="data:image/png;base64,{bar_chart}>
+        <h2>Pie Chart</h2>
+        <img id="pie_chart" src="data:image/png;base64,{pie_chart}" alt="Pie Chart">
+        <h2>Line Chart</h2>
+        <img id="line_chart" src="data:image/png;base64,{line_chart}" alt="Line Chart">
     </body>
     </html>
     """
@@ -101,22 +128,19 @@ def update_charts():
     df = extract_data(file_path)
     if df is not None and not df.empty:
         pie_chart = generate_pie_chart(df)
-        bar_chart = generate_bar_chart(df)
-        socketio.emit('update_charts', {'pie_chart': pie_chart, 'bar_chart': bar_chart})
+        line_chart = generate_line_chart(df)
+        socketio.emit('update_charts', {'pie_chart': pie_chart, 'line_chart': line_chart})
 
 def monitor_logs():
-    file_path = os.path.join(LOG_DIR, LOG_FILE)
-    while not os.path.exists(file_path):
-        print(f"Waiting for log file {file_path} to be created...")
-        time.sleep(5)
-    with open(file_path, 'r') as file:
-        file.seek(0, os.SEEK_END)
-        while True:
-            line = file.readline()
-            if not line:
-                time.sleep(1)
-                continue
-            update_charts()
+    while True:
+        with open(os.path.join(LOG_DIR, LOG_FILE), "r") as file:
+            for line in file:
+                log_entry = extract_data(line)
+                if log_entry is not None:
+                    send_to_dashboard(log_entry, LOGS_API_URL)
+        send_cpu_data()
+        print("Waiting for 1 hour before reading logs again...")
+        time.sleep(3600)
 
 if __name__ == "__main__":
     socketio.start_background_task(monitor_logs)
