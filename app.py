@@ -1,5 +1,5 @@
 import os
-import json
+import re
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
@@ -12,21 +12,21 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 LOG_DIR = "/var/log/suricata"
-LOG_FILE = "eve.json"  # Adjust this to match your actual log file name if needed
+LOG_FILE = "fast.log"
 
 def extract_data(file_path):
     try:
         data = {'timestamp': [], 'event_id': [], 'classification': []}
+        pattern = re.compile(r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)  \[\*\*] \[1:(\d+):\d+] .*? \[\*\*] \[Classification: ([^]]+)]")
+        
         with open(file_path, 'r') as file:
             for line in file:
-                try:
-                    log_data = json.loads(line.strip())
-                    data['timestamp'].append(log_data['timestamp'])
-                    data['event_id'].append(log_data['event_id'])
-                    data['classification'].append(log_data['classification'])
-                except json.JSONDecodeError as e:
-                    print(f"Error decoding JSON in line: {line.strip()}")
-                    print(f"Error: {e}")
+                match = pattern.search(line)
+                if match:
+                    data['timestamp'].append(match.group(1))
+                    data['event_id'].append(match.group(2))
+                    data['classification'].append(match.group(3))
+        
         return pd.DataFrame(data)
     except FileNotFoundError:
         print(f"Error: File not found at {file_path}")
@@ -36,10 +36,9 @@ def extract_data(file_path):
         return None
 
 def generate_pie_chart(df):
-    classification_counts = df['classification'].value_counts()
     plt.figure(figsize=(8, 8))
-    plt.pie(classification_counts, labels=classification_counts.index, autopct='%1.1f%%', startangle=90)
-    plt.title('Classification Distribution')
+    plt.pie(df['event_id'].value_counts(), labels=df['event_id'].value_counts().index, autopct='%1.1f%%', startangle=90)
+    plt.title('Event ID Distribution')
     img_io = io.BytesIO()
     plt.savefig(img_io, format='png')
     plt.close()
@@ -47,13 +46,12 @@ def generate_pie_chart(df):
     return base64.b64encode(img_io.getvalue()).decode()
 
 def generate_bar_chart(df):
-    classification_counts = df['classification'].value_counts()
-    plt.figure(figsize=(10, 6))
-    plt.bar(classification_counts.index, classification_counts.values)
-    plt.xlabel('Classification')
-    plt.ylabel('Count')
-    plt.title('Classification Distribution')
-    plt.xticks(rotation=45, ha='right')
+    plt.figure(figsize=(12, 6))
+    plt.bar(df['timestamp'], df['classification'].astype(str), alpha=0.7)
+    plt.xlabel('Timestamp')
+    plt.ylabel('Classification')
+    plt.title('Classification Over Time')
+    plt.xticks(rotation=90, ha='right')
     plt.tight_layout()
     img_io = io.BytesIO()
     plt.savefig(img_io, format='png')
@@ -121,12 +119,6 @@ def monitor_logs():
             if not line:
                 time.sleep(1)
                 continue
-            try:
-                log_entry = json.loads(line.strip())
-                print(f"New log entry: {log_entry}")
-            except json.JSONDecodeError as e:
-                print(f"Error decoding JSON in line: {line.strip()}")
-                print(f"Error: {e}")
             update_charts()
 
 if __name__ == "__main__":
