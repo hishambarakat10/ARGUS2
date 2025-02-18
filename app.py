@@ -89,10 +89,8 @@ def run_notebook():
     </head>
     <body>
         <h1>Real Time Dashboard</h1>
-        <h2>Pie Chart</h2>
-        <img id="pie_chart" src="data:image/png;base64,{pie_chart}" alt="Pie Chart">
-        <h2>Bar Chart</h2>
-        <img id="bar_chart" src="data:image/png;base64,{bar_chart}" alt="Bar Chart">
+        <img id="pie_chart" src="data:image/png;base64,{pie_chart}>
+        <img id="bar_chart" src="data:image/png;base64,{bar_chart}>
     </body>
     </html>
     """
