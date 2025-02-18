@@ -16,16 +16,15 @@ LOG_FILE = "fast.log"
 
 def extract_data(file_path):
     try:
-        data = {'timestamp': [], 'event_id': [], 'classification': []}
-        pattern = re.compile(r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)  \[\*\*] \[1:(\d+):\d+] .*? \[\*\*] \[Classification: ([^]]+)]")
+        data = {'event_id': [], 'classification': []}
+        pattern = re.compile(r"^\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+  \[\*\*] \[1:(\d+):\d+] .*? \[\*\*] \[Classification: ([^]]+)]")
         
         with open(file_path, 'r') as file:
             for line in file:
                 match = pattern.search(line)
                 if match:
-                    data['timestamp'].append(match.group(1))
-                    data['event_id'].append(match.group(2))
-                    data['classification'].append(match.group(3))
+                    data['event_id'].append(match.group(1))
+                    data['classification'].append(match.group(2))
         
         return pd.DataFrame(data)
     except FileNotFoundError:
@@ -36,9 +35,10 @@ def extract_data(file_path):
         return None
 
 def generate_pie_chart(df):
+    classification_counts = df['classification'].value_counts()
     plt.figure(figsize=(8, 8))
-    plt.pie(df['event_id'].value_counts(), labels=df['event_id'].value_counts().index, autopct='%1.1f%%', startangle=90)
-    plt.title('Event ID Distribution')
+    plt.pie(classification_counts, labels=classification_counts.index, autopct='%1.1f%%', startangle=90)
+    plt.title('Classification Distribution')
     img_io = io.BytesIO()
     plt.savefig(img_io, format='png')
     plt.close()
@@ -47,10 +47,10 @@ def generate_pie_chart(df):
 
 def generate_bar_chart(df):
     plt.figure(figsize=(12, 6))
-    plt.bar(df['timestamp'], df['classification'].astype(str), alpha=0.7)
-    plt.xlabel('Timestamp')
+    plt.bar(df['event_id'], df['classification'], alpha=0.7)
+    plt.xlabel('Event ID')
     plt.ylabel('Classification')
-    plt.title('Classification Over Time')
+    plt.title('Event ID vs Classification')
     plt.xticks(rotation=90, ha='right')
     plt.tight_layout()
     img_io = io.BytesIO()
@@ -58,10 +58,6 @@ def generate_bar_chart(df):
     plt.close()
     img_io.seek(0)
     return base64.b64encode(img_io.getvalue()).decode()
-
-@app.route("/")
-def home():
-    return "Go to /run_notebook to view the results"
 
 @app.route("/run_notebook")
 def run_notebook():
@@ -72,7 +68,6 @@ def run_notebook():
     
     pie_chart = generate_pie_chart(df)
     bar_chart = generate_bar_chart(df)
-    table_html = df.to_html(classes="table table-striped", index=False)
 
     html_template = f"""
     <html>
@@ -89,7 +84,6 @@ def run_notebook():
     </head>
     <body>
         <h1>Real Time Dashboard</h1>
-        {table_html}
         <h2>Pie Chart</h2>
         <img id="pie_chart" src="data:image/png;base64,{pie_chart}" alt="Pie Chart">
         <h2>Bar Chart</h2>
