@@ -13,7 +13,7 @@ from flask import Flask, request, jsonify, render_template_string
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 LOG_DIR = "/var/log/suricata"
 LOG_FILE = "fast.log"
@@ -21,13 +21,12 @@ LOG_FILE = "fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 CPU_API_URL = "http://127.0.0.1:5000/api/cpu"
 DEVICE_NAME = socket.gethostname()
-logs = []  # Store received logs
 
 def extract_data(file_path):
     try:
         data = {'timestamp': [], 'event_id': [], 'classification': []}
         pattern = re.compile(r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)  \[\*\*] \[1:(\d+):\d+] .*? \[\*\*] \[Classification: ([^]]+)]")
-        
+
         with open(file_path, 'r') as file:
             for line in file:
                 match = pattern.search(line)
@@ -35,7 +34,7 @@ def extract_data(file_path):
                     data['timestamp'].append(match.group(1))
                     data['event_id'].append(match.group(2))
                     data['classification'].append(match.group(3))
-        
+
         return pd.DataFrame(data)
     except FileNotFoundError:
         print(f"Error: File not found at {file_path}")
@@ -57,6 +56,9 @@ def send_to_dashboard(data, url):
         response = requests.post(url, json=data)
         response.raise_for_status()
         print(f"Data sent successfully to {url}:", data)
+
+        # Emit update to connected clients
+        socketio.emit('update_data', data)
     except requests.exceptions.RequestException as e:
         print(f"Failed to send data to {url}:", e)
 
@@ -84,7 +86,7 @@ def generate_line_chart(df):
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df['alert_count'] = 1
     df_grouped = df.groupby(df['timestamp'].dt.floor('T')).count()
-    
+
     plt.figure(figsize=(12, 6))
     plt.plot(df_grouped.index, df_grouped['alert_count'], marker='o', linestyle='-')
     plt.xlabel('Timestamp')
@@ -98,31 +100,36 @@ def generate_line_chart(df):
     img_io.seek(0)
     return base64.b64encode(img_io.getvalue()).decode()
 
-@app.route("/run_notebook")
-def run_notebook():
+@app.route("/")
+def dashboard():
     file_path = os.path.join(LOG_DIR, LOG_FILE)
     df = extract_data(file_path)
     if df is None or df.empty:
         return "No data found or file not available."
-    
+
     pie_chart = generate_pie_chart(df)
     line_chart = generate_line_chart(df)
 
     html_template = f"""
     <html>
     <head>
-        <title>Real Time Dashboard</title>
+        <title>Real-Time Dashboard</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
         <script type="text/javascript">
             var socket = io();
+
             socket.on('update_charts', function(data) {{
                 document.getElementById('pie_chart').src = 'data:image/png;base64,' + data.pie_chart;
                 document.getElementById('line_chart').src = 'data:image/png;base64,' + data.line_chart;
             }});
+
+            socket.on('update_data', function(data) {{
+                console.log("New log data received:", data);
+            }});
         </script>
     </head>
     <body>
-        <h1>Real Time Dashboard</h1>
+        <h1>Real-Time Dashboard</h1>
         <h2>Pie Chart</h2>
         <img id="pie_chart" src="data:image/png;base64,{pie_chart}" alt="Pie Chart">
         <h2>Line Chart</h2>
@@ -134,11 +141,18 @@ def run_notebook():
 
 def monitor_logs():
     while True:
-        with open(os.path.join(LOG_DIR, LOG_FILE), "r") as file:
-            for line in file:
-                log_entry = extract_data(line)
-                if log_entry is not None:
-                    send_to_dashboard(log_entry, LOGS_API_URL)
+        file_path = os.path.join(LOG_DIR, LOG_FILE)
+        df = extract_data(file_path)
+
+        if df is not None and not df.empty:
+            pie_chart = generate_pie_chart(df)
+            line_chart = generate_line_chart(df)
+
+            socketio.emit('update_charts', {
+                "pie_chart": pie_chart,
+                "line_chart": line_chart
+            })
+
         send_cpu_data()
         print("Waiting for 1 hour before reading logs again...")
         time.sleep(3600)
