@@ -3,63 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Dashboard</title>
+    <title>Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
 </head>
 <body>
-    <h1>Real-Time Suricata Dashboard</h1>
+    <h1>Dashboard</h1>
 
-    <h2>Alerts Over Time</h2>
-    <canvas id="lineChart"></canvas>
+    <!-- Line Chart -->
+    <div>
+        <h3>Alert Counts Over Time</h3>
+        <canvas id="lineChart"></canvas>
+    </div>
 
-    <h2>Classification Distribution</h2>
-    <canvas id="pieChart"></canvas>
+    <!-- Pie Chart -->
+    <div>
+        <h3>Alert Classification Distribution</h3>
+        <canvas id="pieChart"></canvas>
+    </div>
 
     <script>
-        var socket = io();
-
-        var ctxLine = document.getElementById("lineChart").getContext("2d");
-        var lineChart = new Chart(ctxLine, {
-            type: "line",
-            data: { labels: [], datasets: [{ label: "Alerts", data: [], borderColor: "red", borderWidth: 2 }] },
-            options: { responsive: true, scales: { x: { type: "time", time: { unit: "minute" } }, y: { beginAtZero: true } } }
-        });
-
-        var ctxPie = document.getElementById("pieChart").getContext("2d");
-        var pieChart = new Chart(ctxPie, {
-            type: "pie",
-            data: { labels: [], datasets: [{ data: [], backgroundColor: ["red", "blue", "green", "yellow", "purple"] }] },
-            options: { responsive: true }
-        });
-
-        function updateCharts() {
-            fetch("/api/chart-data")
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.error) {
-                        lineChart.data.labels = data.timestamps;
-                        lineChart.data.datasets[0].data = data.alert_counts;
-                        lineChart.update();
+        // Fetch the chart data from the API and create the charts
+        fetch('/api/chart-data')
+            .then(response => response.json())
+            .then(data => {
+                const ctxLine = document.getElementById('lineChart').getContext('2d');
+                new Chart(ctxLine, {
+                    type: 'line',
+                    data: {
+                        labels: data.timestamps, // Use timestamps for the x-axis
+                        datasets: [{
+                            label: 'Alert Counts',
+                            data: data.alert_counts, // Alert counts for y-axis
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 2,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                type: 'category',
+                                labels: data.timestamps,
+                                ticks: {
+                                    maxRotation: 90,
+                                    minRotation: 45
+                                }
+                            },
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
                     }
                 });
+            });
 
-            fetch("/api/pie-data")
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.error) {
-                        pieChart.data.labels = data.labels;
-                        pieChart.data.datasets[0].data = data.data;
-                        pieChart.update();
+        fetch('/api/pie-data')
+            .then(response => response.json())
+            .then(data => {
+                const ctxPie = document.getElementById('pieChart').getContext('2d');
+                new Chart(ctxPie, {
+                    type: 'pie',
+                    data: {
+                        labels: data.labels, // Alert types as labels
+                        datasets: [{
+                            data: data.values, // Values associated with each alert type
+                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#FF9F40'], // Customize colors
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        return tooltipItem.label + ': ' + tooltipItem.raw + ' Alerts';
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
-        }
-
-        setInterval(updateCharts, 5000);
-
-        socket.on("update_charts", function() {
-            updateCharts();
-        });
+            });
     </script>
 </body>
 </html>
