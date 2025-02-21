@@ -1,27 +1,18 @@
 import os
 import re
 import json
-import requests
 import pandas as pd
-import matplotlib.pyplot as plt
-import io
-import base64
-import time
 import socket
 import psutil
-from flask import Flask, request, jsonify, render_template_string
+import time
+from flask import Flask, jsonify, render_template
 from flask_socketio import SocketIO, emit
-import eventlet
-import eventlet.wsgi
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 LOG_DIR = "/var/log/suricata"
 LOG_FILE = "fast.log"
-
-LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
-CPU_API_URL = "http://127.0.0.1:5000/api/cpu"
 DEVICE_NAME = socket.gethostname()
 
 def extract_data(file_path):
@@ -45,101 +36,41 @@ def extract_data(file_path):
         print(f"An error occurred: {e}")
         return None
 
-@app.route("/api/logs", methods=['GET'])
-def get_logs():
-    file_path = os.path.join(LOG_DIR, LOG_FILE)
-    df = extract_data(file_path)
-    if df is None or df.empty:
-        return jsonify({"error": "No logs found"}), 404
-    return df.to_json(orient="records")
-
-def send_to_dashboard(data, url):
-    try:
-        response = requests.post(url, json=data)
-        response.raise_for_status()
-        print(f"Data sent successfully to {url}:", data)
-
-        # Emit update to connected clients
-        socketio.emit('update_data', data)
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to send data to {url}:", e)
-
-def send_cpu_data():
-    cpu_data = {
-        "device_name": DEVICE_NAME,
-        "cpu_usage": psutil.cpu_percent(interval=1),
-        "cpu_cores": psutil.cpu_count(logical=True),
-        "per_core_usage": psutil.cpu_percent(interval=1, percpu=True)
-    }
-    send_to_dashboard(cpu_data, CPU_API_URL)
-
-def generate_pie_chart(df):
-    classification_counts = df['classification'].value_counts()
-    plt.figure(figsize=(8, 8))
-    plt.pie(classification_counts, labels=classification_counts.index, autopct='%1.1f%%', startangle=90)
-    plt.title('Classification Distribution')
-    img_io = io.BytesIO()
-    plt.savefig(img_io, format='png')
-    plt.close()
-    img_io.seek(0)
-    return base64.b64encode(img_io.getvalue()).decode()
-
-def generate_line_chart(df):
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-    df['alert_count'] = 1
-    df_grouped = df.groupby(df['timestamp'].dt.floor('T')).count()
-
-    plt.figure(figsize=(12, 6))
-    plt.plot(df_grouped.index, df_grouped['alert_count'], marker='o', linestyle='-')
-    plt.xlabel('Timestamp')
-    plt.ylabel('Number of Alerts')
-    plt.title('Alerts Over Time')
-    plt.xticks(rotation=90, ha='right')
-    plt.tight_layout()
-    img_io = io.BytesIO()
-    plt.savefig(img_io, format='png')
-    plt.close()
-    img_io.seek(0)
-    return base64.b64encode(img_io.getvalue()).decode()
-
 @app.route("/")
 def dashboard():
+    return render_template("dashboard.html")
+
+@app.route("/api/chart-data")
+def chart_data():
     file_path = os.path.join(LOG_DIR, LOG_FILE)
     df = extract_data(file_path)
+
     if df is None or df.empty:
-        return "No data found or file not available."
+        return jsonify({"error": "No data found"}), 404
 
-    pie_chart = generate_pie_chart(df)
-    line_chart = generate_line_chart(df)
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['alert_count'] = 1
+    df_grouped = df.groupby(df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')).count()
 
-    html_template = f"""
-    <html>
-    <head>
-        <title>Real-Time Dashboard</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
-        <script type="text/javascript">
-            var socket = io();
+    return jsonify({
+        "timestamps": df_grouped.index.tolist(),
+        "alert_counts": df_grouped["alert_count"].tolist()
+    })
 
-            socket.on('update_charts', function(data) {{
-                document.getElementById('pie_chart').src = 'data:image/png;base64,' + data.pie_chart;
-                document.getElementById('line_chart').src = 'data:image/png;base64,' + data.line_chart;
-            }});
+@app.route("/api/pie-data")
+def pie_data():
+    file_path = os.path.join(LOG_DIR, LOG_FILE)
+    df = extract_data(file_path)
 
-            socket.on('update_data', function(data) {{
-                console.log("New log data received:", data);
-            }});
-        </script>
-    </head>
-    <body>
-        <h1>Real-Time Dashboard</h1>
-        <h2>Pie Chart</h2>
-        <img id="pie_chart" src="data:image/png;base64,{pie_chart}" alt="Pie Chart">
-        <h2>Line Chart</h2>
-        <img id="line_chart" src="data:image/png;base64,{line_chart}" alt="Line Chart">
-    </body>
-    </html>
-    """
-    return render_template_string(html_template)
+    if df is None or df.empty:
+        return jsonify({"error": "No data found"}), 404
+
+    classification_counts = df['classification'].value_counts()
+
+    return jsonify({
+        "labels": classification_counts.index.tolist(),
+        "data": classification_counts.tolist()
+    })
 
 def monitor_logs():
     while True:
@@ -147,17 +78,11 @@ def monitor_logs():
         df = extract_data(file_path)
 
         if df is not None and not df.empty:
-            pie_chart = generate_pie_chart(df)
-            line_chart = generate_line_chart(df)
+            socketio.emit("update_charts")
 
-            socketio.emit('update_charts', {
-                "pie_chart": pie_chart,
-                "line_chart": line_chart
-            })
-
-        send_cpu_data()
-        print("Waiting for 1 hour before reading logs again...")
-        time.sleep(3600)
+        print("Waiting for 5 seconds before reading logs again...")
+        time.sleep(5)
 
 if __name__ == "__main__":
-    socketio.run(app, host="127.0.0.1", port=5000, debug=True)
+    socketio.start_background_task(monitor_logs)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
