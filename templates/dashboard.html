@@ -55,11 +55,13 @@
                 });
         }
 
-        setInterval(updateCharts, 5000);
-
+        // Update charts when Socket.IO event "update_charts" is triggered
         socket.on("update_charts", function() {
             updateCharts();
         });
+
+        // Initial chart load
+        updateCharts();
     </script>
 </body>
 </html>
