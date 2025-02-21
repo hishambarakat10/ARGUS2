@@ -11,9 +11,11 @@ import socket
 import psutil
 from flask import Flask, request, jsonify, render_template_string
 from flask_socketio import SocketIO, emit
+import eventlet
+import eventlet.wsgi
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 LOG_DIR = "/var/log/suricata"
 LOG_FILE = "fast.log"
@@ -158,5 +160,4 @@ def monitor_logs():
         time.sleep(3600)
 
 if __name__ == "__main__":
-    socketio.start_background_task(monitor_logs)
-    socketio.run(app, debug=True)
+    socketio.run(app, host="127.0.0.1", port=5000, debug=True)
