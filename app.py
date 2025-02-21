@@ -5,7 +5,7 @@ import pandas as pd
 import socket
 import psutil
 import time
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
@@ -71,6 +71,27 @@ def pie_data():
         "labels": classification_counts.index.tolist(),
         "data": classification_counts.tolist()
     })
+
+@app.route("/api/logs", methods=["POST"])
+def handle_logs():
+    try:
+        # Get the JSON data from the incoming POST request
+        log_data = request.get_json()
+
+        if log_data is None:
+            return jsonify({"error": "No data provided"}), 400
+
+        # Process the log data (you can store it, process it, or print it)
+        print(f"Received log data: {log_data}")
+
+        # Optionally, you can add logic here to store the log data into a database or a file.
+
+        # Emit an event using Socket.IO to update real-time charts
+        socketio.emit("update_charts")
+
+        return jsonify({"message": "Log data received successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to process log data: {e}"}), 500
 
 def monitor_logs():
     while True:
