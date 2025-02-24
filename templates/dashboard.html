@@ -46,9 +46,12 @@
     });
 
     function updateCharts() {
+        // Fetch the chart data for the line chart
         fetch('/api/chart-data')
             .then(response => response.json())
             .then(data => {
+                console.log("Line Chart Data:", data); // Debug log
+
                 // Update line chart data
                 lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
                 lineChart.data.datasets = [];
@@ -62,21 +65,31 @@
                     });
                 }
                 lineChart.update();
+            })
+            .catch(error => {
+                console.error("Error fetching line chart data:", error);
             });
 
+        // Fetch the chart data for the pie chart
         fetch('/api/pie-data')
             .then(response => response.json())
             .then(data => {
+                console.log("Pie Chart Data:", data); // Debug log
+
                 // Update pie chart data
                 pieChart.data.labels = data.labels;  // Event types
-                pieChart.data.datasets[0].data = data.percentages;  // Numeric percentages (without the % sign)
+                pieChart.data.datasets[0].data = data.data;  // Numeric percentages (without the % sign)
                 pieChart.update();
+            })
+            .catch(error => {
+                console.error("Error fetching pie chart data:", error);
             });
     }
 
     // Socket.io listener for real-time updates
     const socket = io();
     socket.on('update_charts', function() {
+        console.log("Updating charts...");
         updateCharts();
     });
 
