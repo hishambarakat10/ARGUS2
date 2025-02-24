@@ -3,10 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        /* Ensure that the canvas is visible and takes enough space */
+        canvas {
+            max-width: 100%;
+            margin: 20px auto;
+            display: block;
+        }
+    </style>
 </head>
 <body>
+    <h1>Suricata Log Dashboard</h1>
 
     <!-- Line chart for event counts over time -->
     <canvas id="lineChart" width="400" height="200"></canvas>
