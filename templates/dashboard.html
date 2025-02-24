@@ -3,149 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.4.0/socket.io.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-        }
-        .chart-container {
-            width: 90%;
-            max-width: 700px;
-            margin: 20px auto;
-        }
-        canvas {
-            display: block;
-            width: 100% !important;
-            height: auto !important;
-        }
-        h3 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
+        canvas { margin: 20px; }
     </style>
 </head>
 <body>
-
-    <!-- Line Chart -->
-    <div class="chart-container">
-        <h3>Event Type Over Time</h3>
+    <h1>Real-Time Suricata Dashboard</h1>
+    <div>
         <canvas id="lineChart"></canvas>
     </div>
-
-    <!-- Pie Chart -->
-    <div class="chart-container">
-        <h3>Event Type Distribution</h3>
+    <div>
         <canvas id="pieChart"></canvas>
     </div>
 
     <script>
-        let lineChart, pieChart;
+        var lineChartCtx = document.getElementById("lineChart").getContext("2d");
+        var pieChartCtx = document.getElementById("pieChart").getContext("2d");
 
-        function fetchChartData() {
+        var lineChart = new Chart(lineChartCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'category',
+                        title: {
+                            display: true,
+                            text: 'Timestamp'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Event Type Count'
+                        }
+                    }
+                }
+            }
+        });
+
+        var pieChart = new Chart(pieChartCtx, {
+            type: 'pie',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00']  // Sample colors
+                }]
+            }
+        });
+
+        // Fetch data for the charts
+        function updateCharts() {
             fetch('/api/chart-data')
                 .then(response => response.json())
                 .then(data => {
-                    if (!data.timestamps || !data.event_counts || data.timestamps.length === 0) {
-                        console.warn("No data available for the line chart.");
-                        return;
+                    // Update line chart data
+                    lineChart.data.labels = data.timestamps;
+                    lineChart.data.datasets = [];
+                    for (var eventType in data.datasets) {
+                        lineChart.data.datasets.push({
+                            label: eventType,
+                            data: data.datasets[eventType],
+                            borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+                            fill: false
+                        });
                     }
-
-                    const ctxLine = document.getElementById('lineChart').getContext('2d');
-
-                    if (lineChart) {
-                        lineChart.destroy();
-                    }
-
-                    lineChart = new Chart(ctxLine, {
-                        type: 'line',
-                        data: {
-                            labels: data.timestamps,
-                            datasets: [{
-                                label: 'Event Count',
-                                data: data.event_counts,
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderWidth: 2,
-                                pointRadius: data.timestamps.length > 50 ? 0 : 5,
-                                pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-                                fill: false
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                x: { type: 'category' },
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: { stepSize: 1, min: 1 }
-                                }
-                            }
-                        }
-                    });
-                })
-                .catch(error => console.error("Error fetching line chart data:", error));
+                    lineChart.update();
+                });
 
             fetch('/api/pie-data')
                 .then(response => response.json())
                 .then(data => {
-                    if (!data.labels || !data.percentages || data.labels.length === 0) {
-                        console.warn("No data available for the pie chart.");
-                        return;
-                    }
-
-                    const ctxPie = document.getElementById('pieChart').getContext('2d');
-
-                    if (pieChart) {
-                        pieChart.destroy();
-                    }
-
-                    const colors = generateColors(data.labels.length);
-
-                    pieChart = new Chart(ctxPie, {
-                        type: 'pie',
-                        data: {
-                            labels: data.labels,
-                            datasets: [{
-                                data: data.percentages,
-                                backgroundColor: colors,
-                                hoverOffset: 10,
-                                borderColor: '#ffffff',
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { position: 'top' },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(tooltipItem) {
-                                            return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                })
-                .catch(error => console.error("Error fetching pie chart data:", error));
+                    // Update pie chart data
+                    pieChart.data.labels = data.labels;  // Event types
+                    pieChart.data.datasets[0].data = data.percentages;  // Percentages of each event type
+                    pieChart.update();
+                });
         }
 
-        function generateColors(count) {
-            const colors = [];
-            for (let i = 0; i < count; i++) {
-                const hue = (i * 137.5) % 360;
-                colors.push(`hsl(${hue}, 70%, 50%)`);
-            }
-            return colors;
-        }
+        // SocketIO event listener for real-time updates
+        var socket = io.connect('http://127.0.0.1:5000');
+        socket.on('update_charts', function() {
+            updateCharts();
+        });
 
-        fetchChartData();
-        setInterval(fetchChartData, 5000);
+        // Initial data load
+        updateCharts();
     </script>
 </body>
 </html>
