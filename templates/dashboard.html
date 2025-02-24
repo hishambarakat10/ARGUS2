@@ -11,15 +11,12 @@
             margin: 20px;
         }
         .chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            margin-bottom: 30px;
             width: 90%;
-            max-width: 1000px;
+            max-width: 700px;
+            margin: 20px auto;
         }
         canvas {
+            display: block;
             width: 100% !important;
             height: auto !important;
         }
@@ -50,10 +47,15 @@
             fetch('/api/chart-data')
                 .then(response => response.json())
                 .then(data => {
+                    if (!data.timestamps || !data.event_counts || data.timestamps.length === 0) {
+                        console.warn("No data available for the line chart.");
+                        return;
+                    }
+
                     const ctxLine = document.getElementById('lineChart').getContext('2d');
-                    
+
                     if (lineChart) {
-                        lineChart.destroy(); // Destroy previous chart instance
+                        lineChart.destroy();
                     }
 
                     lineChart = new Chart(ctxLine, {
@@ -61,7 +63,7 @@
                         data: {
                             labels: data.timestamps,
                             datasets: [{
-                                label: 'Event Types',
+                                label: 'Event Count',
                                 data: data.event_counts,
                                 borderColor: 'rgba(75, 192, 192, 1)',
                                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -83,18 +85,23 @@
                             }
                         }
                     });
-                });
+                })
+                .catch(error => console.error("Error fetching line chart data:", error));
 
             fetch('/api/pie-data')
                 .then(response => response.json())
                 .then(data => {
+                    if (!data.labels || !data.percentages || data.labels.length === 0) {
+                        console.warn("No data available for the pie chart.");
+                        return;
+                    }
+
                     const ctxPie = document.getElementById('pieChart').getContext('2d');
 
                     if (pieChart) {
-                        pieChart.destroy(); // Destroy previous chart instance
+                        pieChart.destroy();
                     }
 
-                    // Generate unique colors for each event type
                     const colors = generateColors(data.labels.length);
 
                     pieChart = new Chart(ctxPie, {
@@ -124,13 +131,14 @@
                             }
                         }
                     });
-                });
+                })
+                .catch(error => console.error("Error fetching pie chart data:", error));
         }
 
         function generateColors(count) {
             const colors = [];
             for (let i = 0; i < count; i++) {
-                const hue = (i * 137.5) % 360; // Distribute colors evenly
+                const hue = (i * 137.5) % 360;
                 colors.push(`hsl(${hue}, 70%, 50%)`);
             }
             return colors;
