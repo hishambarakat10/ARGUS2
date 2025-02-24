@@ -1,8 +1,8 @@
 import os
 import json
 import time
-import pandas as pd
 import socket
+import pandas as pd
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 
@@ -32,23 +32,27 @@ def dashboard():
 def handle_logs():
     log_entry = request.get_json()
 
-    # Store and process data
-    log_data.append(log_entry)
-    process_chart_data(log_entry)
-    process_pie_data(log_entry)
+    if log_entry:
+        log_data.append(log_entry)
+        process_chart_data(log_entry)
+        process_pie_data(log_entry)
+        socketio.emit("update_charts")
 
-    socketio.emit("update_charts")  # Notify frontend
     return jsonify({"message": "Log data received and processed"}), 200
 
 @app.route("/api/chart-data")
 def chart_data_route():
     timestamps = [entry["timestamp"] for entry in chart_data]
     counts = [entry["count"] for entry in chart_data]
+
     return jsonify({"timestamps": timestamps, "alert_counts": counts})
 
 @app.route("/api/pie-data")
 def pie_data_route():
-    return jsonify({"labels": list(pie_data.keys()), "data": list(pie_data.values())})
+    classifications = list(pie_data.keys())
+    counts = list(pie_data.values())
+
+    return jsonify({"labels": classifications, "data": counts})
 
 def monitor_logs():
     while True:
