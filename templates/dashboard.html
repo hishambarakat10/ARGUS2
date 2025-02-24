@@ -5,129 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .chart-container {
-            width: 90%; /* Take up 90% of the container width */
-            max-width: 900px; /* Limit the width to 900px */
-            margin: 20px 0;
-        }
-
-        canvas {
-            width: 100% !important; /* Make canvas full width */
-            height: auto;  /* Adjust the height proportionally */
-        }
-
-        h3 {
-            text-align: center;
-        }
-
-        /* Additional flex container styling for responsive layout */
-        .charts {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-            justify-content: space-evenly;
-            align-items: center;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
 </head>
 <body>
-    <div class="charts">
-        <!-- Line Chart Container -->
-        <div class="chart-container">
-            <h3>Line Chart (Event Count by Timestamp)</h3>
-            <canvas id="lineChart"></canvas>
-        </div>
+    <div>
+        <h2>Event Type Counts over Time (Line Chart)</h2>
+        <canvas id="lineChart"></canvas>
+    </div>
 
-        <!-- Pie Chart Container -->
-        <div class="chart-container">
-            <h3>Pie Chart (Event Type Distribution)</h3>
-            <canvas id="pieChart"></canvas>
-        </div>
+    <div>
+        <h2>Event Types (Pie Chart)</h2>
+        <canvas id="pieChart"></canvas>
     </div>
 
     <script>
-        const socket = io.connect('http://127.0.0.1:5000');
-
-        let lineChartData = {
-            labels: [],
-            datasets: []
-        };
-
-        let pieChartData = {
-            labels: [],
-            data: []
-        };
-
-        const lineChart = new Chart(document.getElementById("lineChart"), {
+        // Create the line chart
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        const lineChart = new Chart(lineCtx, {
             type: 'line',
-            data: lineChartData,
+            data: {
+                labels: [],
+                datasets: []
+            },
             options: {
                 scales: {
-                    x: {
-                        type: 'category',
-                        title: {
-                            display: true,
-                            text: 'Timestamp'
-                        },
-                        ticks: {
-                            callback: function(value, index, values) {
-                                return index + 1;  // Make x-axis display whole numbers starting from 1
-                            }
-                        }
-                    },
                     y: {
                         ticks: {
-                            stepSize: 1
-                        },
-                        title: {
-                            display: true,
-                            text: 'Event Count'
+                            stepSize: 1  // Y-axis increments in whole numbers
                         }
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: true,  // Let chart size adjust responsively
-                elements: {
-                    point: {
-                        radius: 5 // Make sure dots are visible
                     }
                 }
             }
         });
 
-        const pieChart = new Chart(document.getElementById("pieChart"), {
+        // Create the pie chart
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        const pieChart = new Chart(pieCtx, {
             type: 'pie',
             data: {
-                labels: pieChartData.labels,
+                labels: [],
                 datasets: [{
-                    data: pieChartData.data,
-                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#F1C40F']
+                    data: [],
+                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
+                    borderColor: '#fff',
+                    borderWidth: 1
                 }]
             },
             options: {
-                responsive: true,
                 plugins: {
                     tooltip: {
                         callbacks: {
                             label: function(tooltipItem) {
-                                return tooltipItem.raw.toFixed(2) + '%';
+                                // Add percentage sign to the tooltip
+                                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
                             }
                         }
                     }
@@ -135,75 +65,42 @@
             }
         });
 
-        socket.on("update_charts", function() {
-            // Update Line Chart Data
-            fetch("/api/chart-data")
+        function updateCharts() {
+            fetch('/api/chart-data')
                 .then(response => response.json())
                 .then(data => {
-                    const groupedData = groupByTimestamp(data.timestamps, data.datasets);
-                    lineChartData.labels = groupedData.timestamps;
-
-                    // Create a separate dataset for each event type
-                    lineChartData.datasets = Object.keys(groupedData.eventData).map(eventType => ({
-                        label: eventType,
-                        data: groupedData.eventData[eventType],
-                        borderColor: getRandomColor(),
-                        fill: false,
-                        tension: 0.4,  // Connect the dots with a smooth line
-                        pointRadius: 5
-                    }));
-
+                    // Update line chart data
+                    lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
+                    lineChart.data.datasets = [];
+                    for (var eventType in data.datasets) {
+                        lineChart.data.datasets.push({
+                            label: eventType,
+                            data: data.datasets[eventType],
+                            borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+                            fill: false
+                        });
+                    }
                     lineChart.update();
                 });
 
-            // Update Pie Chart Data
-            fetch("/api/pie-data")
+            fetch('/api/pie-data')
                 .then(response => response.json())
                 .then(data => {
-                    pieChartData.labels = data.labels;
-                    pieChartData.data = data.data;
+                    // Update pie chart data
+                    pieChart.data.labels = data.labels;  // Event types
+                    pieChart.data.datasets[0].data = data.percentages;  // Numeric percentages (without the % sign)
                     pieChart.update();
                 });
+        }
+
+        // Socket.io listener for real-time updates
+        const socket = io();
+        socket.on('update_charts', function() {
+            updateCharts();
         });
 
-        function getRandomColor() {
-            return '#' + Math.floor(Math.random() * 16777215).toString(16);
-        }
-
-        // Function to group timestamps by minute and second
-        function groupByTimestamp(timestamps, eventData) {
-            let grouped = {
-                timestamps: [],
-                eventData: {}
-            };
-
-            timestamps.forEach(timestamp => {
-                // Round the timestamp to the nearest minute and second
-                const date = new Date(timestamp);
-                const groupedTimestamp = `${date.getMinutes()}:${date.getSeconds()}`;
-
-                // Add to grouped timestamps if not already present
-                if (!grouped.timestamps.includes(groupedTimestamp)) {
-                    grouped.timestamps.push(groupedTimestamp);
-                }
-
-                // Initialize data for each event type
-                if (!grouped.eventData[groupedTimestamp]) {
-                    grouped.eventData[groupedTimestamp] = {};
-                }
-
-                Object.keys(eventData).forEach(eventType => {
-                    if (!grouped.eventData[groupedTimestamp][eventType]) {
-                        grouped.eventData[groupedTimestamp][eventType] = 0;
-                    }
-                    if (eventData[eventType][timestamp]) {
-                        grouped.eventData[groupedTimestamp][eventType]++;
-                    }
-                });
-            });
-
-            return grouped;
-        }
+        // Initial data load
+        updateCharts();
     </script>
 </body>
 </html>
