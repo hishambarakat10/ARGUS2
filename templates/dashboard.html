@@ -1,106 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suricata Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
-</head>
-<body>
-    <div>
-        <h2>Event Type Counts over Time (Line Chart)</h2>
-        <canvas id="lineChart"></canvas>
-    </div>
-
-    <div>
-        <h2>Event Types (Pie Chart)</h2>
-        <canvas id="pieChart"></canvas>
-    </div>
-
-    <script>
-        // Create the line chart
-        const lineCtx = document.getElementById('lineChart').getContext('2d');
-        const lineChart = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: []
-            },
-            options: {
-                scales: {
-                    y: {
-                        ticks: {
-                            stepSize: 1  // Y-axis increments in whole numbers
-                        }
+<script>
+    // Create the line chart
+    const lineCtx = document.getElementById('lineChart').getContext('2d');
+    const lineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            scales: {
+                y: {
+                    ticks: {
+                        stepSize: 1  // Y-axis increments in whole numbers
                     }
                 }
             }
-        });
-
-        // Create the pie chart
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        const pieChart = new Chart(pieCtx, {
-            type: 'pie',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                // Add percentage sign to the tooltip
-                                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        function updateCharts() {
-            fetch('/api/chart-data')
-                .then(response => response.json())
-                .then(data => {
-                    // Update line chart data
-                    lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
-                    lineChart.data.datasets = [];
-                    for (var eventType in data.datasets) {
-                        lineChart.data.datasets.push({
-                            label: eventType,
-                            data: data.datasets[eventType],
-                            borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
-                            fill: false
-                        });
-                    }
-                    lineChart.update();
-                });
-
-            fetch('/api/pie-data')
-                .then(response => response.json())
-                .then(data => {
-                    // Update pie chart data
-                    pieChart.data.labels = data.labels;  // Event types
-                    pieChart.data.datasets[0].data = data.percentages;  // Numeric percentages (without the % sign)
-                    pieChart.update();
-                });
         }
+    });
 
-        // Socket.io listener for real-time updates
-        const socket = io();
-        socket.on('update_charts', function() {
-            updateCharts();
-        });
+    // Create the pie chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    const pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
+                borderColor: '#fff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            // Add percentage sign to the tooltip
+                            return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
 
-        // Initial data load
+    function updateCharts() {
+        fetch('/api/chart-data')
+            .then(response => response.json())
+            .then(data => {
+                // Update line chart data
+                lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
+                lineChart.data.datasets = [];
+                for (var eventType in data.datasets) {
+                    lineChart.data.datasets.push({
+                        label: eventType,
+                        data: data.datasets[eventType],
+                        borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+                        fill: false,  // No fill under the line
+                        lineTension: 0.4  // Smooth the lines
+                    });
+                }
+                lineChart.update();
+            });
+
+        fetch('/api/pie-data')
+            .then(response => response.json())
+            .then(data => {
+                // Update pie chart data
+                pieChart.data.labels = data.labels;  // Event types
+                pieChart.data.datasets[0].data = data.percentages;  // Numeric percentages (without the % sign)
+                pieChart.update();
+            });
+    }
+
+    // Socket.io listener for real-time updates
+    const socket = io();
+    socket.on('update_charts', function() {
         updateCharts();
-    </script>
-</body>
-</html>
+    });
+
+    // Initial data load
+    updateCharts();
+</script>
