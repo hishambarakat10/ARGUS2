@@ -1,98 +1,118 @@
-<script>
-    // Create the line chart
-    const lineCtx = document.getElementById('lineChart').getContext('2d');
-    const lineChart = new Chart(lineCtx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: []
-        },
-        options: {
-            scales: {
-                y: {
-                    ticks: {
-                        stepSize: 1  // Y-axis increments in whole numbers
-                    }
-                }
-            }
-        }
-    });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suricata Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Suricata Log Dashboard</h1>
 
-    // Create the pie chart
-    const pieCtx = document.getElementById('pieChart').getContext('2d');
-    const pieChart = new Chart(pieCtx, {
-        type: 'pie',
-        data: {
-            labels: [],
-            datasets: [{
-                data: [],
-                backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
-                borderColor: '#fff',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(tooltipItem) {
-                            // Add percentage sign to the tooltip
-                            return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+    <!-- Line chart for event counts over time -->
+    <canvas id="lineChart" width="400" height="200"></canvas>
+
+    <!-- Pie chart for event type distribution -->
+    <canvas id="pieChart" width="400" height="200"></canvas>
+
+    <script>
+        // Create the line chart
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        const lineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: {
+                scales: {
+                    y: {
+                        ticks: {
+                            stepSize: 1  // Y-axis increments in whole numbers
                         }
                     }
                 }
             }
-        }
-    });
+        });
 
-    function updateCharts() {
-        // Fetch the chart data for the line chart
-        fetch('/api/chart-data')
-            .then(response => response.json())
-            .then(data => {
-                console.log("Line Chart Data:", data); // Debug log
-
-                // Update line chart data
-                lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
-                lineChart.data.datasets = [];
-                for (var eventType in data.datasets) {
-                    lineChart.data.datasets.push({
-                        label: eventType,
-                        data: data.datasets[eventType],
-                        borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
-                        fill: false,  // No fill under the line
-                        lineTension: 0.4  // Smooth the lines
-                    });
+        // Create the pie chart
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        const pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                // Add percentage sign to the tooltip
+                                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                            }
+                        }
+                    }
                 }
-                lineChart.update();
-            })
-            .catch(error => {
-                console.error("Error fetching line chart data:", error);
-            });
+            }
+        });
 
-        // Fetch the chart data for the pie chart
-        fetch('/api/pie-data')
-            .then(response => response.json())
-            .then(data => {
-                console.log("Pie Chart Data:", data); // Debug log
+        function updateCharts() {
+            // Fetch the chart data for the line chart
+            fetch('/api/chart-data')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Line Chart Data:", data); // Debug log
 
-                // Update pie chart data
-                pieChart.data.labels = data.labels;  // Event types
-                pieChart.data.datasets[0].data = data.data;  // Numeric percentages (without the % sign)
-                pieChart.update();
-            })
-            .catch(error => {
-                console.error("Error fetching pie chart data:", error);
-            });
-    }
+                    // Update line chart data
+                    lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
+                    lineChart.data.datasets = [];
+                    for (var eventType in data.datasets) {
+                        lineChart.data.datasets.push({
+                            label: eventType,
+                            data: data.datasets[eventType],
+                            borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+                            fill: false,  // No fill under the line
+                            lineTension: 0.4  // Smooth the lines
+                        });
+                    }
+                    lineChart.update();
+                })
+                .catch(error => {
+                    console.error("Error fetching line chart data:", error);
+                });
 
-    // Socket.io listener for real-time updates
-    const socket = io();
-    socket.on('update_charts', function() {
-        console.log("Updating charts...");
+            // Fetch the chart data for the pie chart
+            fetch('/api/pie-data')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Pie Chart Data:", data); // Debug log
+
+                    // Update pie chart data
+                    pieChart.data.labels = data.labels;  // Event types
+                    pieChart.data.datasets[0].data = data.data;  // Numeric percentages (without the % sign)
+                    pieChart.update();
+                })
+                .catch(error => {
+                    console.error("Error fetching pie chart data:", error);
+                });
+        }
+
+        // Socket.io listener for real-time updates
+        const socket = io();
+        socket.on('update_charts', function() {
+            console.log("Updating charts...");
+            updateCharts();
+        });
+
+        // Initial data load
         updateCharts();
-    });
-
-    // Initial data load
-    updateCharts();
-</script>
+    </script>
+</body>
+</html>
