@@ -5,65 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
-    <style>
-        /* Ensure that the canvas is visible and takes enough space */
-        canvas {
-            max-width: 100%;
-            margin: 20px auto;
-            display: block;
-        }
-    </style>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 </head>
 <body>
-    <h1>Suricata Log Dashboard</h1>
+    <div>
+        <h3>Line Chart (Event Count by Timestamp)</h3>
+        <canvas id="lineChart"></canvas>
+    </div>
 
-    <!-- Line chart for event counts over time -->
-    <canvas id="lineChart" width="400" height="200"></canvas>
-
-    <!-- Pie chart for event type distribution -->
-    <canvas id="pieChart" width="400" height="200"></canvas>
+    <div>
+        <h3>Pie Chart (Event Type Distribution)</h3>
+        <canvas id="pieChart"></canvas>
+    </div>
 
     <script>
-        // Create the line chart
-        const lineCtx = document.getElementById('lineChart').getContext('2d');
-        const lineChart = new Chart(lineCtx, {
+        const socket = io.connect('http://127.0.0.1:5000');
+
+        let lineChartData = {
+            labels: [],
+            datasets: []
+        };
+
+        let pieChartData = {
+            labels: [],
+            data: []
+        };
+
+        const lineChart = new Chart(document.getElementById("lineChart"), {
             type: 'line',
-            data: {
-                labels: [],
-                datasets: []
-            },
+            data: lineChartData,
             options: {
                 scales: {
+                    x: {
+                        type: 'category',
+                        title: {
+                            display: true,
+                            text: 'Timestamp'
+                        }
+                    },
                     y: {
                         ticks: {
-                            stepSize: 1  // Y-axis increments in whole numbers
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Event Count'
                         }
                     }
-                }
+                },
+                responsive: true,
+                maintainAspectRatio: false
             }
         });
 
-        // Create the pie chart
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        const pieChart = new Chart(pieCtx, {
+        const pieChart = new Chart(document.getElementById("pieChart"), {
             type: 'pie',
             data: {
-                labels: [],
+                labels: pieChartData.labels,
                 datasets: [{
-                    data: [],
-                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
-                    borderColor: '#fff',
-                    borderWidth: 1
+                    data: pieChartData.data,
+                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#F1C40F']
                 }]
             },
             options: {
+                responsive: true,
                 plugins: {
                     tooltip: {
                         callbacks: {
                             label: function(tooltipItem) {
-                                // Add percentage sign to the tooltip
-                                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                                return tooltipItem.raw.toFixed(2) + '%';
                             }
                         }
                     }
@@ -71,60 +81,34 @@
             }
         });
 
-        function updateCharts() {
-            // Fetch the chart data for the line chart
-            fetch('/api/chart-data')
+        socket.on("update_charts", function() {
+            // Update Line Chart Data
+            fetch("/api/chart-data")
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Line Chart Data:", data); // Debug log
-
-                    // Update line chart data
-                    lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
-                    lineChart.data.datasets = [];
-                    for (var eventType in data.datasets) {
-                        lineChart.data.datasets.push({
-                            label: eventType,
-                            data: data.datasets[eventType],
-                            borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
-                            fill: false,  // No fill under the line
-                            lineTension: 0.4  // Smooth the lines
-                        });
-                    }
+                    lineChartData.labels = data.timestamps;
+                    lineChartData.datasets = Object.keys(data.datasets).map(eventType => ({
+                        label: eventType,
+                        data: data.datasets[eventType],
+                        borderColor: getRandomColor(),
+                        fill: false
+                    }));
                     lineChart.update();
-                })
-                .catch(error => {
-                    console.error("Error fetching line chart data:", error);
                 });
 
-            // Fetch the chart data for the pie chart
-            fetch('/api/pie-data')
+            // Update Pie Chart Data
+            fetch("/api/pie-data")
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Pie Chart Data:", data); // Debug log
-
-                    if (data.labels && data.data) {
-                        // Update pie chart data
-                        pieChart.data.labels = data.labels;  // Event types
-                        pieChart.data.datasets[0].data = data.data;  // Numeric percentages (without the % sign)
-                        pieChart.update();
-                    } else {
-                        console.error("Invalid data for pie chart:", data); // Error handling
-                    }
-                })
-                .catch(error => {
-                    console.error("Error fetching pie chart data:", error);
+                    pieChartData.labels = data.labels;
+                    pieChartData.data = data.data;
+                    pieChart.update();
                 });
-        }
-
-        // Socket.io listener for real-time updates
-        const socket = io();
-        socket.on('update_charts', function() {
-            console.log("Updating charts...");
-            updateCharts();
         });
 
-        // Initial data load
-        updateCharts();
+        function getRandomColor() {
+            return '#' + Math.floor(Math.random()*16777215).toString(16);
+        }
     </script>
 </body>
 </html>
