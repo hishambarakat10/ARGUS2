@@ -5,96 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
 </head>
 <body>
-    <h1>Suricata IDS Dashboard</h1>
+    <h1>Suricata Dashboard</h1>
 
     <!-- Line Chart -->
     <div>
-        <h3>Alert Counts Over Time</h3>
+        <h3>Event Types Over Time</h3>
         <canvas id="lineChart"></canvas>
     </div>
 
     <!-- Pie Chart -->
     <div>
-        <h3>Alert Classification Distribution</h3>
+        <h3>Event Type Distribution (%)</h3>
         <canvas id="pieChart"></canvas>
     </div>
 
     <script>
-        const socket = io();  // Connect to Flask-SocketIO
+        const socket = io();
 
-        let lineChart, pieChart;
-
-        function fetchChartData() {
+        // Function to update the line chart
+        function updateLineChart() {
             fetch('/api/chart-data')
                 .then(response => response.json())
                 .then(data => {
-                    if (lineChart) {
-                        lineChart.data.labels = data.timestamps;
-                        lineChart.data.datasets[0].data = data.alert_counts;
-                        lineChart.update();
-                    } else {
-                        const ctxLine = document.getElementById('lineChart').getContext('2d');
-                        lineChart = new Chart(ctxLine, {
-                            type: 'line',
-                            data: {
-                                labels: data.timestamps,
-                                datasets: [{
-                                    label: 'Alert Counts',
-                                    data: data.alert_counts,
-                                    borderColor: 'rgba(75, 192, 192, 1)',
-                                    borderWidth: 2,
-                                    fill: false
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-                                    x: { type: 'category' },
-                                    y: { beginAtZero: true }
-                                }
-                            }
-                        });
-                    }
-                });
+                    const ctxLine = document.getElementById('lineChart').getContext('2d');
+                    const datasets = Object.keys(data.datasets).map(event_type => ({
+                        label: event_type,
+                        data: data.datasets[event_type],
+                        borderWidth: 2,
+                        fill: false
+                    }));
 
-            fetch('/api/pie-data')
-                .then(response => response.json())
-                .then(data => {
-                    if (pieChart) {
-                        pieChart.data.labels = data.labels;
-                        pieChart.data.datasets[0].data = data.data;
-                        pieChart.update();
-                    } else {
-                        const ctxPie = document.getElementById('pieChart').getContext('2d');
-                        pieChart = new Chart(ctxPie, {
-                            type: 'pie',
-                            data: {
-                                labels: data.labels,
-                                datasets: [{
-                                    data: data.data,
-                                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#FF9F40'],
-                                    hoverOffset: 4
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    legend: { position: 'top' }
-                                }
+                    new Chart(ctxLine, {
+                        type: 'line',
+                        data: {
+                            labels: data.timestamps,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: { type: 'category', ticks: { maxRotation: 90, minRotation: 45 } },
+                                y: { beginAtZero: true }
                             }
-                        });
-                    }
+                        }
+                    });
                 });
         }
 
-        socket.on("update_charts", function() {
-            fetchChartData();  // Fetch updated data when notified by the server
-        });
+        // Function to update the pie chart
+        function updatePieChart() {
+            fetch('/api/pie-data')
+                .then(response => response.json())
+                .then(data => {
+                    const ctxPie = document.getElementById('pieChart').getContext('2d');
+                    new Chart(ctxPie, {
+                        type: 'pie',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                data: data.data,
+                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#FF9F40'],
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(tooltipItem) {
+                                            return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+        }
 
-        fetchChartData();  // Initial data load
+        // Initial load
+        updateLineChart();
+        updatePieChart();
+
+        // Listen for real-time updates
+        socket.on("update_charts", () => {
+            updateLineChart();
+            updatePieChart();
+        });
     </script>
 </body>
 </html>
