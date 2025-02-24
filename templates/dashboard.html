@@ -4,57 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-bottom: 30px;
+        }
+        canvas {
+            width: 50% !important;
+            height: 50% !important;
+            max-width: 400px;
+            max-height: 300px;
+        }
+        h3 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
 
     <!-- Line Chart -->
-    <div>
-        <h3>Event Types Over Time</h3>
+    <div class="chart-container">
+        <h3>Alert Counts Over Time</h3>
         <canvas id="lineChart"></canvas>
     </div>
 
     <!-- Pie Chart -->
-    <div>
-        <h3>Event Type Distribution (%)</h3>
+    <div class="chart-container">
+        <h3>Alert Classification Distribution</h3>
         <canvas id="pieChart"></canvas>
     </div>
 
     <script>
-        const socket = io();
-
-        // Function to update the line chart
-        function updateLineChart() {
+        function fetchChartData() {
             fetch('/api/chart-data')
                 .then(response => response.json())
                 .then(data => {
                     const ctxLine = document.getElementById('lineChart').getContext('2d');
-                    const datasets = Object.keys(data.datasets).map(event_type => ({
-                        label: event_type,
-                        data: data.datasets[event_type],
-                        borderWidth: 2,
-                        fill: false
-                    }));
-
                     new Chart(ctxLine, {
                         type: 'line',
                         data: {
                             labels: data.timestamps,
-                            datasets: datasets
+                            datasets: [{
+                                label: 'Event Type Counts',
+                                data: data.event_counts,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            }]
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: false,
                             scales: {
-                                x: { type: 'category', ticks: { maxRotation: 90, minRotation: 45 } },
+                                x: { type: 'category', labels: data.timestamps },
                                 y: { beginAtZero: true }
                             }
                         }
                     });
                 });
-        }
 
-        // Function to update the pie chart
-        function updatePieChart() {
             fetch('/api/pie-data')
                 .then(response => response.json())
                 .then(data => {
@@ -64,13 +81,14 @@
                         data: {
                             labels: data.labels,
                             datasets: [{
-                                data: data.data,
+                                data: data.percentages,
                                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#FF9F40'],
                                 hoverOffset: 4
                             }]
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: { position: 'top' },
                                 tooltip: {
@@ -86,15 +104,8 @@
                 });
         }
 
-        // Initial load
-        updateLineChart();
-        updatePieChart();
-
-        // Listen for real-time updates
-        socket.on("update_charts", () => {
-            updateLineChart();
-            updatePieChart();
-        });
+        fetchChartData();
+        setInterval(fetchChartData, 5000); // Refresh every 5 seconds
     </script>
 </body>
 </html>
