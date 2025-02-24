@@ -2,7 +2,6 @@ import os
 import json
 import time
 import socket
-from datetime import datetime
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 
@@ -19,12 +18,8 @@ timestamps_data = {}  # For line chart
 
 def process_log_entry(log_entry):
     """ Processes log entry and updates data for charts """
-    # Parse timestamp to datetime object
     timestamp = log_entry["timestamp"]
     event_type = log_entry["event_type"]
-
-    # Group timestamp by minute and second (rounding)
-    timestamp_min_sec = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
     # Update event type count (for pie chart)
     if event_type not in event_type_counts:
@@ -32,11 +27,12 @@ def process_log_entry(log_entry):
     event_type_counts[event_type] += 1
 
     # Update timestamps vs. event type count (for line chart)
-    if timestamp_min_sec not in timestamps_data:
-        timestamps_data[timestamp_min_sec] = {}
-    if event_type not in timestamps_data[timestamp_min_sec]:
-        timestamps_data[timestamp_min_sec][event_type] = 0
-    timestamps_data[timestamp_min_sec][event_type] += 1
+    timestamp_minute = timestamp[:19]  # Group by year-month-day hour:minute:second
+    if timestamp_minute not in timestamps_data:
+        timestamps_data[timestamp_minute] = {}
+    if event_type not in timestamps_data[timestamp_minute]:
+        timestamps_data[timestamp_minute][event_type] = 0
+    timestamps_data[timestamp_minute][event_type] += 1
 
 @app.route("/")
 def dashboard():
@@ -78,10 +74,10 @@ def pie_data_route():
     total_events = sum(event_type_counts.values())
     percentages = {k: (v / total_events) * 100 for k, v in event_type_counts.items()} if total_events else {}
 
-    # Add percentage sign to each value
+    # Add percentage sign to each value only for display purposes (not for the chart data)
     percentages_with_sign = {k: f"{v:.2f}%" for k, v in percentages.items()}
 
-    return jsonify({"labels": list(percentages_with_sign.keys()), "percentages": list(percentages_with_sign.values())})
+    return jsonify({"labels": list(percentages_with_sign.keys()), "percentages": list(percentages.values())})
 
 if __name__ == "__main__":
     socketio.run(app, host="127.0.0.1", port=5000, debug=True)
