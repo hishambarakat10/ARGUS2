@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.1/dist/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
 </head>
 <body>
+    <h1>Suricata Dashboard</h1>
+
     <div>
-        <h2>Real-time Event Type Distribution</h2>
-        <canvas id="pieChart" width="400" height="400"></canvas>
+        <h2>Event Types (Pie Chart)</h2>
+        <canvas id="pieChart"></canvas>
     </div>
+
     <div>
-        <h2>Real-time Event Counts by Timestamp</h2>
-        <canvas id="lineChart" width="400" height="400"></canvas>
+        <h2>Event Type Counts over Time (Line Chart)</h2>
+        <canvas id="lineChart"></canvas>
     </div>
 
     <script>
@@ -30,6 +33,18 @@
                     borderColor: '#fff',
                     borderWidth: 1
                 }]
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                // Add percentage sign to the tooltip
+                                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                            }
+                        }
+                    }
+                }
             }
         });
 
@@ -44,9 +59,8 @@
             options: {
                 scales: {
                     y: {
-                        beginAtZero: true,
                         ticks: {
-                            stepSize: 1  // Force whole number increments on the y-axis
+                            stepSize: 1  // Y-axis increments in whole numbers
                         }
                     }
                 }
@@ -76,7 +90,7 @@
                 .then(data => {
                     // Update pie chart data
                     pieChart.data.labels = data.labels;  // Event types
-                    pieChart.data.datasets[0].data = data.percentages;  // Percentages of each event type
+                    pieChart.data.datasets[0].data = data.percentages;  // Numeric percentages (without the % sign)
                     pieChart.update();
                 });
         }
