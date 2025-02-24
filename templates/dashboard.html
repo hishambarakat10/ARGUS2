@@ -5,25 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.socket.io/4.4.0/socket.io.min.js"></script>
-    <style>
-        canvas { margin: 20px; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.1/dist/socket.io.min.js"></script>
 </head>
 <body>
-    <h1>Real-Time Suricata Dashboard</h1>
     <div>
-        <canvas id="lineChart"></canvas>
+        <h2>Real-time Event Type Distribution</h2>
+        <canvas id="pieChart" width="400" height="400"></canvas>
     </div>
     <div>
-        <canvas id="pieChart"></canvas>
+        <h2>Real-time Event Counts by Timestamp</h2>
+        <canvas id="lineChart" width="400" height="400"></canvas>
     </div>
 
     <script>
-        var lineChartCtx = document.getElementById("lineChart").getContext("2d");
-        var pieChartCtx = document.getElementById("pieChart").getContext("2d");
+        // Create the pie chart
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        const pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
+            }
+        });
 
-        var lineChart = new Chart(lineChartCtx, {
+        // Create the line chart
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        const lineChart = new Chart(lineCtx, {
             type: 'line',
             data: {
                 labels: [],
@@ -31,41 +43,22 @@
             },
             options: {
                 scales: {
-                    x: {
-                        type: 'category',
-                        title: {
-                            display: true,
-                            text: 'Timestamp'
-                        }
-                    },
                     y: {
-                        title: {
-                            display: true,
-                            text: 'Event Type Count'
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1  // Force whole number increments on the y-axis
                         }
                     }
                 }
             }
         });
 
-        var pieChart = new Chart(pieChartCtx, {
-            type: 'pie',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00']  // Sample colors
-                }]
-            }
-        });
-
-        // Fetch data for the charts
         function updateCharts() {
             fetch('/api/chart-data')
                 .then(response => response.json())
                 .then(data => {
                     // Update line chart data
-                    lineChart.data.labels = data.timestamps;
+                    lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
                     lineChart.data.datasets = [];
                     for (var eventType in data.datasets) {
                         lineChart.data.datasets.push({
@@ -88,8 +81,8 @@
                 });
         }
 
-        // SocketIO event listener for real-time updates
-        var socket = io.connect('http://127.0.0.1:5000');
+        // Socket.io listener for real-time updates
+        const socket = io();
         socket.on('update_charts', function() {
             updateCharts();
         });
