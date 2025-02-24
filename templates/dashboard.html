@@ -14,35 +14,52 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             height: 100vh;
+            overflow: hidden;
         }
 
         .chart-container {
-            width: 80%;
-            max-width: 800px;
-            margin: 20px;
+            width: 90%; /* Take up 90% of the container width */
+            max-width: 900px; /* Limit the width to 900px */
+            margin: 20px 0;
         }
 
         canvas {
-            width: 100% !important;
-            height: 300px; /* Shortened the height */
+            width: 100% !important; /* Make canvas full width */
+            height: auto;  /* Adjust the height proportionally */
         }
 
         h3 {
             text-align: center;
         }
+
+        /* Additional flex container styling for responsive layout */
+        .charts {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
-    <div class="chart-container">
-        <h3>Line Chart (Event Count by Timestamp)</h3>
-        <canvas id="lineChart"></canvas>
-    </div>
+    <div class="charts">
+        <!-- Line Chart Container -->
+        <div class="chart-container">
+            <h3>Line Chart (Event Count by Timestamp)</h3>
+            <canvas id="lineChart"></canvas>
+        </div>
 
-    <div class="chart-container">
-        <h3>Pie Chart (Event Type Distribution)</h3>
-        <canvas id="pieChart"></canvas>
+        <!-- Pie Chart Container -->
+        <div class="chart-container">
+            <h3>Pie Chart (Event Type Distribution)</h3>
+            <canvas id="pieChart"></canvas>
+        </div>
     </div>
 
     <script>
@@ -86,7 +103,7 @@
                     }
                 },
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: true,  // Let chart size adjust responsively
                 elements: {
                     point: {
                         radius: 5 // Make sure dots are visible
