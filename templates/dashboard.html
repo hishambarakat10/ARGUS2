@@ -8,19 +8,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
 </head>
 <body>
-    <h1>Suricata Dashboard</h1>
+    <div>
+        <h2>Event Type Counts over Time (Line Chart)</h2>
+        <canvas id="lineChart"></canvas>
+    </div>
 
     <div>
         <h2>Event Types (Pie Chart)</h2>
         <canvas id="pieChart"></canvas>
     </div>
 
-    <div>
-        <h2>Event Type Counts over Time (Line Chart)</h2>
-        <canvas id="lineChart"></canvas>
-    </div>
-
     <script>
+        // Create the line chart
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        const lineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: {
+                scales: {
+                    y: {
+                        ticks: {
+                            stepSize: 1  // Y-axis increments in whole numbers
+                        }
+                    }
+                }
+            }
+        });
+
         // Create the pie chart
         const pieCtx = document.getElementById('pieChart').getContext('2d');
         const pieChart = new Chart(pieCtx, {
@@ -42,25 +59,6 @@
                                 // Add percentage sign to the tooltip
                                 return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
                             }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Create the line chart
-        const lineCtx = document.getElementById('lineChart').getContext('2d');
-        const lineChart = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: []
-            },
-            options: {
-                scales: {
-                    y: {
-                        ticks: {
-                            stepSize: 1  // Y-axis increments in whole numbers
                         }
                     }
                 }
