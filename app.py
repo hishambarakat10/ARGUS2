@@ -2,7 +2,6 @@ import os
 import json
 import time
 import socket
-import pandas as pd
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 
@@ -70,11 +69,14 @@ def chart_data_route():
 
 @app.route("/api/pie-data")
 def pie_data_route():
-    """ Sends data for the pie chart """
-    total_events = sum(event_type_counts.values())
+    """ Sends data for the pie chart with percentage of each event type """
+    total_events = sum(event_type_counts.values())  # Sum up all event counts
     percentages = {k: (v / total_events) * 100 for k, v in event_type_counts.items()} if total_events else {}
 
-    return jsonify({"labels": list(percentages.keys()), "data": list(percentages.values())})
+    return jsonify({
+        "labels": list(percentages.keys()),  # Event types
+        "percentages": list(percentages.values())  # Percentage of each event type
+    })
 
 if __name__ == "__main__":
     socketio.run(app, host="127.0.0.1", port=5000, debug=True)
