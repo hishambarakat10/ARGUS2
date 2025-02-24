@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
 </head>
 <body>
-    <h1>Dashboard</h1>
+    <h1>Suricata IDS Dashboard</h1>
 
     <!-- Line Chart -->
     <div>
@@ -23,7 +23,7 @@
     </div>
 
     <script>
-        const socket = io();  // Connect to WebSocket server
+        const socket = io();  // Connect to Flask-SocketIO
 
         let lineChart, pieChart;
 
@@ -52,23 +52,14 @@
                             options: {
                                 responsive: true,
                                 scales: {
-                                    x: {
-                                        ticks: {
-                                            maxRotation: 90,
-                                            minRotation: 45
-                                        }
-                                    },
-                                    y: {
-                                        beginAtZero: true
-                                    }
+                                    x: { type: 'category' },
+                                    y: { beginAtZero: true }
                                 }
                             }
                         });
                     }
                 });
-        }
 
-        function fetchPieData() {
             fetch('/api/pie-data')
                 .then(response => response.json())
                 .then(data => {
@@ -91,16 +82,7 @@
                             options: {
                                 responsive: true,
                                 plugins: {
-                                    legend: {
-                                        position: 'top',
-                                    },
-                                    tooltip: {
-                                        callbacks: {
-                                            label: function(tooltipItem) {
-                                                return tooltipItem.label + ': ' + tooltipItem.raw + ' Alerts';
-                                            }
-                                        }
-                                    }
+                                    legend: { position: 'top' }
                                 }
                             }
                         });
@@ -108,16 +90,11 @@
                 });
         }
 
-        // Initial data fetch
-        fetchChartData();
-        fetchPieData();
-
-        // Listen for updates from WebSocket
-        socket.on("update_charts", () => {
-            fetchChartData();
-            fetchPieData();
+        socket.on("update_charts", function() {
+            fetchChartData();  // Fetch updated data when notified by the server
         });
 
+        fetchChartData();  // Initial data load
     </script>
 </body>
 </html>
