@@ -26,7 +26,7 @@
 
         canvas {
             width: 100% !important;
-            height: 400px;
+            height: 300px; /* Shortened the height */
         }
 
         h3 {
@@ -68,6 +68,11 @@
                         title: {
                             display: true,
                             text: 'Timestamp'
+                        },
+                        ticks: {
+                            callback: function(value, index, values) {
+                                return index + 1;  // Make x-axis display whole numbers starting from 1
+                            }
                         }
                     },
                     y: {
@@ -81,7 +86,12 @@
                     }
                 },
                 responsive: true,
-                maintainAspectRatio: false
+                maintainAspectRatio: false,
+                elements: {
+                    point: {
+                        radius: 5 // Make sure dots are visible
+                    }
+                }
             }
         });
 
@@ -113,13 +123,19 @@
             fetch("/api/chart-data")
                 .then(response => response.json())
                 .then(data => {
-                    lineChartData.labels = data.timestamps;
-                    lineChartData.datasets = Object.keys(data.datasets).map(eventType => ({
+                    const groupedData = groupByTimestamp(data.timestamps, data.datasets);
+                    lineChartData.labels = groupedData.timestamps;
+
+                    // Create a separate dataset for each event type
+                    lineChartData.datasets = Object.keys(groupedData.eventData).map(eventType => ({
                         label: eventType,
-                        data: data.datasets[eventType],
+                        data: groupedData.eventData[eventType],
                         borderColor: getRandomColor(),
-                        fill: false
+                        fill: false,
+                        tension: 0.4,  // Connect the dots with a smooth line
+                        pointRadius: 5
                     }));
+
                     lineChart.update();
                 });
 
@@ -134,7 +150,42 @@
         });
 
         function getRandomColor() {
-            return '#' + Math.floor(Math.random()*16777215).toString(16);
+            return '#' + Math.floor(Math.random() * 16777215).toString(16);
+        }
+
+        // Function to group timestamps by minute and second
+        function groupByTimestamp(timestamps, eventData) {
+            let grouped = {
+                timestamps: [],
+                eventData: {}
+            };
+
+            timestamps.forEach(timestamp => {
+                // Round the timestamp to the nearest minute and second
+                const date = new Date(timestamp);
+                const groupedTimestamp = `${date.getMinutes()}:${date.getSeconds()}`;
+
+                // Add to grouped timestamps if not already present
+                if (!grouped.timestamps.includes(groupedTimestamp)) {
+                    grouped.timestamps.push(groupedTimestamp);
+                }
+
+                // Initialize data for each event type
+                if (!grouped.eventData[groupedTimestamp]) {
+                    grouped.eventData[groupedTimestamp] = {};
+                }
+
+                Object.keys(eventData).forEach(eventType => {
+                    if (!grouped.eventData[groupedTimestamp][eventType]) {
+                        grouped.eventData[groupedTimestamp][eventType] = 0;
+                    }
+                    if (eventData[eventType][timestamp]) {
+                        grouped.eventData[groupedTimestamp][eventType]++;
+                    }
+                });
+            });
+
+            return grouped;
         }
     </script>
 </body>
