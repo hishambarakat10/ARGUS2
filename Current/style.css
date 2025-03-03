@@ -1,0 +1,120 @@
+/* Overall Page Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f8f8;
+    text-align: center;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    background: white;
+    width: 350px;
+    margin: 50px auto;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Title Styling */
+.dashboard-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Last Updated Text */
+.last-updated {
+    font-style: italic;
+    color: #666;
+    font-size: 12px;
+}
+
+/* Alerts Container */
+.alerts-container {
+    margin-top: 15px;
+}
+
+/* Individual Alert Box */
+.alert-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border-radius: 12px;
+    padding: 10px;
+    margin: 8px 0;
+    box-shadow: 3px 3px 0px rgb(243, 243, 243);
+    border: 1px solid rgb(207, 206, 206);
+
+}
+
+/* Alert Text */
+.alert-text {
+    text-align: left;
+
+}
+
+.alert-title {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.alert-time {
+    font-size: 12px;
+    color: #777;
+}
+
+/* Alert Status Dot */
+.alert-status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+ 
+
+}
+
+.topnav {
+    background-color: #2c60ea;
+    overflow: hidden;
+  }
+  
+  /* Style the links inside the navigation bar */
+  .topnav a {
+    float: left;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+  }
+  
+  /* Change the color of links on hover I DONT LIKE THIS CHANGE IT LATER*/
+  .topnav a:hover {
+    color:cornflowerblue
+  }
+  
+  /* Add a color to the active/current link */
+  .topnav a.active {
+    font-weight: bold;
+    color: white;
+  }
+  
+  .no-link {
+    pointer-events: none; /* Disable click */
+    color: inherit; /* Ensure text color matches */
+    text-decoration: none; /* Remove underline */
+  }
+
+  .topnav-right {
+    float: right;
+  }
+
+  .security-logs{
+    width: 25%;  /* Adjust this as necessary */
+    padding: 20px;
+    background-color: #fff;  /* White background for contrast */
+    border-radius: 30px;  /* Round corners for the bubble effect */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);  /* Add a subtle shadow to create the floating effect */
+    margin-top: 20px;  /* Space from other elements */
+    float: right;
+  }

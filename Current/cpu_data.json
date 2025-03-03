@@ -1,0 +1,14 @@
+{
+    "capstone-VirtualBox": {
+        "cpu_usage": 0.5,
+        "cpu_cores": 6,
+        "per_core_usage": [
+            1.0,
+            2.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ]
+    }
+}
