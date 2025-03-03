@@ -1,0 +1,138 @@
+login css
+
+
+/* General body styles */
+body {
+    background-image: url('/static/images/2.jpg');  /* Background image (adjust the path) */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    position: relative; /* Ensure positioning for sliding text */
+}
+
+/* Container for background blur */
+body::before {
+    content: ''; /* Adds an empty content before other elements */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px); 
+    z-index: -1;
+}
+
+/* Sliding text style */
+#sliding-text {
+    position: absolute;
+    top: 10%; 
+    left: 0;
+    width: 100%;
+    font-size: 50px; /* Adjust size as needed */
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    animation: slide-text 10s linear infinite; 
+    z-index: 10; 
+    border: 2px solid #ff0066; 
+    border-radius: 10px; 
+}
+
+/* Animation for sliding text */
+@keyframes slide-text {
+    0% {
+        transform: translateX(100%); 
+    }
+    100% {
+        transform: translateX(-100%); 
+    }
+}
+
+/* Centered login container */
+.login-container {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 40px 50px;  /* Increased padding for a bigger box */
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+    text-align: center;
+    width: 450px;  /* Increased width for a larger login box */
+    border: 2px solid #ff0066; /* Border similar to the sliding text box */
+}
+
+/* Header styling */
+h1 {
+    font-size: 28px;  /* Increased font size */
+    margin-bottom: 30px;  /* Increased margin for more space */
+    color: #ff0066; /* Argus branding color */
+}
+
+/* Form styling */
+input {
+    width: 90%;
+    padding: 14px;  /* Increased padding for a bigger input */
+    margin: 14px 0;  /* Increased margin for more space */
+    border-radius: 5px;
+    border: 1px solid #444;
+    background: #222;
+    color: #fff;
+    text-align: center;
+    font-size: 16px;
+}
+
+input:focus {
+    border-color: #ff0066;
+    outline: none;
+}
+
+/* Button styling */
+button {
+    background-color: #ff0066;
+    color: white;
+    padding: 14px 22px;  
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #ff33aa;
+}
+
+/* Flash message styling */
+.flash-messages {
+    margin-top: 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.flash {
+    padding: 12px;  
+    margin-top: 12px; 
+    border-radius: 5px;
+    color: white;
+}
+
+.flash.error {
+    background-color: #ff3333;
+}
+
+.flash.success {
+    background-color: #33cc33;
+}
+
+.flash.warning {
+    background-color: #ffcc00;
+}
