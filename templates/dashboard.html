@@ -8,99 +8,45 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
 </head>
 <body>
-    <div style='width: 600; height: 300px'>
+    <div style="width: 600px; height: 300px">
         <h2>Event Type Counts over Time (Line Chart)</h2>
         <canvas id="lineChart"></canvas>
     </div>
 
-    <div style='width: 600; height: 300px'>
+    <div style="width: 600px; height: 300px">
         <h2>Event Types (Pie Chart)</h2>
         <canvas id="pieChart"></canvas>
     </div>
 
+    <!-- Chatbot Section -->
+    <div>
+        <h2>Suricata IDS Chatbot</h2>
+        <textarea id="chatInput" rows="3" placeholder="Ask about IDS logs..."></textarea>
+        <button onclick="askChatbot()">Ask</button>
+        <p><strong>Response:</strong> <span id="chatResponse"></span></p>
+    </div>
+
     <script>
-        // Create the line chart
-        const lineCtx = document.getElementById('lineChart').getContext('2d');
-        const lineChart = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: []
-            },
-            options: {
-                scales: {
-                    y: {
-                        ticks: {
-                            stepSize: 1  // Y-axis increments in whole numbers
-                        }
-                    }
-                }
-            }
-        });
+        function askChatbot() {
+            const userMessage = document.getElementById("chatInput").value;
+            document.getElementById("chatResponse").innerText = "Thinking...";
 
-        // Create the pie chart
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        const pieChart = new Chart(pieCtx, {
-            type: 'pie',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                // Add percentage sign to the tooltip
-                                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        function updateCharts() {
-            fetch('/api/chart-data')
-                .then(response => response.json())
-                .then(data => {
-                    // Update line chart data
-                    lineChart.data.labels = data.timestamps;  // Timestamps are now grouped
-                    lineChart.data.datasets = [];
-                    for (var eventType in data.datasets) {
-                        lineChart.data.datasets.push({
-                            label: eventType,
-                            data: data.datasets[eventType],
-                           // borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
-                            fill: false
-                        });
-                    }
-                    lineChart.update();
-                });
-
-            fetch('/api/pie-data')
-                .then(response => response.json())
-                .then(data => {
-                    // Update pie chart data
-                    pieChart.data.labels = data.labels;  // Event types
-                    pieChart.data.datasets[0].data = data.percentages;  // Numeric percentages (without the % sign)
-                    pieChart.update();
-                });
+            fetch("/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: userMessage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("chatResponse").innerText = data.response;
+            })
+            .catch(error => {
+                document.getElementById("chatResponse").innerText = "Error: Unable to reach chatbot.";
+                console.error("Chatbot Error:", error);
+            });
         }
-
-        // Socket.io listener for real-time updates
-        const socket = io();
-        socket.on('update_charts', function() {
-            updateCharts();
-        });
-
-        // Initial data load
-        updateCharts();
     </script>
 </body>
 </html>
