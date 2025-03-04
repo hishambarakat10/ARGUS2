@@ -25,17 +25,15 @@
         <button onclick="askChatbot()">Ask</button>
         <p><strong>Response:</strong> <span id="chatResponse"></span></p>
     </div>
-
+    
     <script>
         function askChatbot() {
             const userMessage = document.getElementById("chatInput").value;
             document.getElementById("chatResponse").innerText = "Thinking...";
-
-            fetch("/chat", {
+    
+            fetch("http://127.0.0.1:5001/chat", {  // Chatbot API URL
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: userMessage })
             })
             .then(response => response.json())
@@ -47,6 +45,6 @@
                 console.error("Chatbot Error:", error);
             });
         }
-    </script>
+    </script>    
 </body>
 </html>
