@@ -18,6 +18,15 @@
         <canvas id="pieChart"></canvas>
     </div>
 
+    <div style="width: 400px; height: 300px">
+        <h2>Chat with AI</h2>
+        <div id="chatbox" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px; margin-bottom: 10px">
+            <!-- Chat messages will appear here -->
+        </div>
+        <input type="text" id="chatInput" placeholder="Type a message..." style="width: 80%" />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
     <script>
         let lineChart, pieChart;
 
@@ -66,14 +75,39 @@
                 });
         }
 
-        // Update charts every 10 seconds
-        setInterval(updateCharts, 60000);
-
         // WebSocket connection to trigger updates on new logs
         const socket = io();
         socket.on("update_charts", function() {
             updateCharts();
         });
+
+        function sendMessage() {
+            const userMessage = document.getElementById("chatInput").value;
+
+            if (!userMessage) return;
+
+            // Display the user's message
+            const chatbox = document.getElementById("chatbox");
+            chatbox.innerHTML += `<div><strong>You:</strong> ${userMessage}</div>`;
+            document.getElementById("chatInput").value = "";
+
+            // Send message to backend (Gemini API)
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userMessage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const chatbox = document.getElementById("chatbox");
+                if (data.response && data.response.choices) {
+                    chatbox.innerHTML += `<div><strong>Gemini:</strong> ${data.response.choices[0].message.content}</div>`;
+                } else {
+                    chatbox.innerHTML += `<div><strong>Error:</strong> ${data.error}</div>`;
+                }
+                chatbox.scrollTop = chatbox.scrollHeight; // Scroll to the latest message
+            });
+        }
 
         updateCharts();  // Initial load
     </script>
