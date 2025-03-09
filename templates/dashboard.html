@@ -9,16 +9,16 @@
 </head>
 <body>
     <div style="width: 600px; height: 300px">
-        <h2>Event Type Counts over Time (Line Chart)</h2>
+        <h2>Classification Over Time (Line Chart)</h2>
         <canvas id="lineChart"></canvas>
     </div>
 
     <div style="width: 600px; height: 300px">
-        <h2>Event Types (Pie Chart)</h2>
+        <h2>Classification Distribution (Pie Chart)</h2>
         <canvas id="pieChart"></canvas>
     </div>
 
-    <!-- Chatbot Section -->
+     <!-- Chatbot Section -->
     <div>
         <h2>Suricata IDS Chatbot</h2>
         <textarea id="chatInput" rows="3" placeholder="Ask about IDS logs..."></textarea>
@@ -32,23 +32,28 @@
             updateCharts();
         });
 
+        let lineChart, pieChart;
+
         function updateCharts() {
             fetch('/api/chart-data')
                 .then(response => response.json())
                 .then(data => {
                     const lineCtx = document.getElementById('lineChart').getContext('2d');
-                    const lineChart = new Chart(lineCtx, {
+
+                    if (lineChart) lineChart.destroy();
+                    lineChart = new Chart(lineCtx, {
                         type: 'line',
                         data: {
                             labels: data.timestamps,
-                            datasets: Object.entries(data.datasets).map(([eventType, counts]) => ({
-                                label: eventType,
+                            datasets: Object.entries(data.datasets).map(([classification, counts]) => ({
+                                label: classification,
                                 data: counts,
                                 fill: false
                             }))
                         },
                         options: {
-                            scales: { y: { ticks: { stepSize: 1 } } }
+                            responsive: true,
+                            scales: { y: { beginAtZero: true } }
                         }
                     });
                 });
@@ -57,7 +62,9 @@
                 .then(response => response.json())
                 .then(data => {
                     const pieCtx = document.getElementById('pieChart').getContext('2d');
-                    new Chart(pieCtx, {
+
+                    if (pieChart) pieChart.destroy();
+                    pieChart = new Chart(pieCtx, {
                         type: 'pie',
                         data: {
                             labels: data.labels,
@@ -91,14 +98,16 @@
             });
         }
 
-        // Ensure charts update when new data arrives
+        // Update charts every 10 seconds
+        setInterval(updateCharts, 10000);
+
+        // WebSocket connection to trigger updates on new logs
         const socket = io();
         socket.on("update_charts", function() {
             updateCharts();
         });
 
-        // Initial load
-        updateCharts();
+        updateCharts();  // Initial load
     </script>
 </body>
 </html>
