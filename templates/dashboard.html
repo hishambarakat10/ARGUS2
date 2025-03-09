@@ -6,16 +6,32 @@
     <title>Suricata Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+    <style>
+        .container { display: flex; }
+        .chart-container { width: 60%; }
+        .pie-container { width: 40%; }
+        .chatbox { width: 100%; margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+    </style>
 </head>
 <body>
-    <div style="width: 600px; height: 300px">
-        <h2>Classification Over Time (Line Chart)</h2>
-        <canvas id="lineChart"></canvas>
+
+    <div class="container">
+        <div class="chart-container">
+            <h2>Classification Over Time (Line Chart)</h2>
+            <canvas id="lineChart"></canvas>
+        </div>
+        <div class="pie-container">
+            <h2>Classification Distribution (Pie Chart)</h2>
+            <canvas id="pieChart"></canvas>
+        </div>
     </div>
 
-    <div style="width: 600px; height: 300px">
-        <h2>Classification Distribution (Pie Chart)</h2>
-        <canvas id="pieChart"></canvas>
+    <!-- Chatbot Section -->
+    <div class="chatbox">
+        <h2>Suricata IDS Chatbot</h2>
+        <textarea id="chatInput" rows="3" placeholder="Ask about IDS logs..."></textarea>
+        <button onclick="askChatbot()">Ask</button>
+        <p><strong>Response:</strong> <span id="chatResponse"></span></p>
     </div>
 
     <script>
@@ -25,57 +41,33 @@
             fetch('/api/chart-data')
                 .then(response => response.json())
                 .then(data => {
-                    const lineCtx = document.getElementById('lineChart').getContext('2d');
-
                     if (lineChart) lineChart.destroy();
-                    lineChart = new Chart(lineCtx, {
+                    lineChart = new Chart(document.getElementById('lineChart').getContext('2d'), {
                         type: 'line',
-                        data: {
-                            labels: data.timestamps,
-                            datasets: Object.entries(data.datasets).map(([classification, counts]) => ({
-                                label: classification,
-                                data: counts,
-                                fill: false
-                            }))
-                        },
-                        options: {
-                            responsive: true,
-                            scales: { y: { beginAtZero: true } }
-                        }
+                        data: { labels: data.timestamps, datasets: Object.entries(data.datasets).map(([c, counts]) => ({ label: c, data: counts, fill: false })) }
                     });
                 });
 
             fetch('/api/pie-data')
                 .then(response => response.json())
                 .then(data => {
-                    const pieCtx = document.getElementById('pieChart').getContext('2d');
-
                     if (pieChart) pieChart.destroy();
-                    pieChart = new Chart(pieCtx, {
+                    pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
                         type: 'pie',
-                        data: {
-                            labels: data.labels,
-                            datasets: [{
-                                data: data.percentages,
-                                backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'],
-                                borderColor: '#fff',
-                                borderWidth: 1
-                            }]
-                        }
+                        data: { labels: data.labels, datasets: [{ data: data.percentages }] }
                     });
                 });
         }
 
-        // Update charts every 10 seconds
+        function askChatbot() {
+            fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: document.getElementById("chatInput").value }) })
+                .then(response => response.json()).then(data => document.getElementById("chatResponse").innerText = data.response);
+        }
+
         setInterval(updateCharts, 10000);
-
-        // WebSocket connection to trigger updates on new logs
-        const socket = io();
-        socket.on("update_charts", function() {
-            updateCharts();
-        });
-
-        updateCharts();  // Initial load
+        const socket = io(); socket.on("update_charts", updateCharts);
+        updateCharts();
     </script>
+
 </body>
 </html>
