@@ -18,20 +18,7 @@
         <canvas id="pieChart"></canvas>
     </div>
 
-     <!-- Chatbot Section -->
-    <div>
-        <h2>Suricata IDS Chatbot</h2>
-        <textarea id="chatInput" rows="3" placeholder="Ask about IDS logs..."></textarea>
-        <button onclick="askChatbot()">Ask</button>
-        <p><strong>Response:</strong> <span id="chatResponse"></span></p>
-    </div>
-
     <script>
-        // Ensure charts load properly before chatbot is initialized
-        document.addEventListener("DOMContentLoaded", function() {
-            updateCharts();
-        });
-
         let lineChart, pieChart;
 
         function updateCharts() {
@@ -77,25 +64,6 @@
                         }
                     });
                 });
-        }
-
-        function askChatbot() {
-            const userMessage = document.getElementById("chatInput").value;
-            document.getElementById("chatResponse").innerText = "Thinking...";
-
-            fetch("http://127.0.0.1:5001/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userMessage })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("chatResponse").innerText = data.response;
-            })
-            .catch(error => {
-                document.getElementById("chatResponse").innerText = "Error: Unable to reach chatbot.";
-                console.error("Chatbot Error:", error);
-            });
         }
 
         // Update charts every 10 seconds
