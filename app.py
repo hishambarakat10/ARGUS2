@@ -43,6 +43,12 @@ def handle_logs():
     socketio.emit("update_charts")
     return jsonify({"message": "Log received"}), 200
 
+@app.route("/api/logs-data", methods=["GET"])
+def get_logs_data():
+    """ Provides the log data and classifications for the chatbot to query """
+    logs_data = [{"timestamp": entry["timestamp"], "classification": entry["classification"]} for entry in log_data]
+    return jsonify({"logs": logs_data, "classification_counts": classification_counts})
+
 @app.route("/api/chat", methods=["POST"])
 def chat():
     """ Handles chatbot queries using TinyLlama """
