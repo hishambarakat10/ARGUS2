@@ -6,8 +6,9 @@ import re
 LOG_FILE = "/var/log/suricata/fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 
+# Updated regex to extract classification inside [Classification: ...]
 log_pattern = re.compile(
-    r"(?P<timestamp>\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)  \[\*\*\] \[\d+:\d+:\d+\] (?P<classification>.*?) \[\*\*\]"
+    r"(?P<timestamp>\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)  \[\*\*\] .*? \[\*\*\] \[Classification: (?P<classification>.*?)\]"
 )
 
 def read_logs():
@@ -25,7 +26,7 @@ def read_logs():
             if match:
                 log_entry = {
                     "timestamp": match.group("timestamp"),
-                    "classification": match.group("classification")
+                    "classification": match.group("classification")  # Extracted classification
                 }
                 response = requests.post(LOGS_API_URL, json=log_entry)
                 
