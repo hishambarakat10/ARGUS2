@@ -61,10 +61,7 @@
 
         function askChatbot() {
             fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: document.getElementById("chatInput").value }) })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById("chatResponse").innerText = data.response;
-                });
+                .then(response => response.json()).then(data => document.getElementById("chatResponse").innerText = data.response);
         }
 
         setInterval(updateCharts, 10000);
