@@ -11,33 +11,29 @@ log_pattern = re.compile(
     r"(?P<timestamp>\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)  \[\*\*\] .*? \[\*\*\] \[Classification: (?P<classification>.*?)\]"
 )
 
-def read_logs():
-    """ Continuously reads fast.log and sends a log entry every 10 seconds """
-    with open(LOG_FILE, "r") as file:
+def follow_log(file_path):
+    """ Continuously reads fast.log and sends logs when new lines appear """
+    with open(file_path, "r") as file:
         file.seek(0, os.SEEK_END)  # Move to the end of the file
-        last_log = None
 
         while True:
             line = file.readline()
             if line:
                 match = log_pattern.search(line)
                 if match:
-                    last_log = {
+                    log_entry = {
                         "timestamp": match.group("timestamp"),
                         "classification": match.group("classification")
                     }
-            
-            if last_log:
-                response = requests.post(LOGS_API_URL, json=last_log)
-                if response.status_code == 200:
-                    print(f"Log sent successfully: {last_log}")
-                else:
-                    print(f"Failed to send log: {response.status_code}, {response.text}")
+                    response = requests.post(LOGS_API_URL, json=log_entry)
+                    
+                    if response.status_code == 200:
+                        print(f"Log sent successfully: {log_entry}")
+                    else:
+                        print(f"Failed to send log: {response.status_code}, {response.text}")
             else:
-                print("No new log found, resending last known log...")
-
-            time.sleep(10)  # Send a log every 10 seconds
+                time.sleep(0.1)  # Prevent high CPU usage when no new data
 
 if __name__ == "__main__":
-    print("Monitoring fast.log and sending a log every 10 seconds...")
-    read_logs()
+    print("Monitoring fast.log and sending logs on update...")
+    follow_log(LOG_FILE)
