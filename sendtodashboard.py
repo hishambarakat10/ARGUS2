@@ -18,8 +18,6 @@ def follow_log(file_path):
 
         while True:
             line = file.readline()
-            print(line)
-            break
             if line:
                 match = log_pattern.search(line)
                 if match:
