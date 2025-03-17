@@ -1,100 +1,83 @@
 import os
 import requests
+import tensorflow as tf  # TensorFlow for alert calculations
+import numpy as np
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 import json
+from datetime import datetime  # Used for time-based calculations
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Google Gemini 2.0 API endpoint and key
-GEMINI_API_URL = "https://gemini.googleapis.com/v1/chat"
-GEMINI_API_KEY = "AIzaSyDrA-I9691P5TdccQRT4rAkjqQYMbB84qk"  # Replace with your Gemini API key
+RASA_API_URL = "http://localhost:5005/webhooks/rest/webhook"
 
-# Sample data (you will update this based on the data you want Gemini to analyze)
 log_data = []
-classification_counts = {}  # For pie chart
-timestamps_data = {}  # For line chart
+alerts_per_minute = {}  # Stores alert counts per minute for the line chart
+severity_counts = {"Not Suspicious": 0, "Potentially Suspicious": 0, "Malicious Traffic": 0}  # Stores severity distribution for the pie chart
 
-# Process log entries (same as before)
 def process_log_entry(log_entry):
-    timestamp = log_entry["timestamp"]
-    classification = log_entry["classification"]
-    classification_counts[classification] = classification_counts.get(classification, 0) + 1
+    """Processes log data to calculate alerts per minute and severity breakdown."""
+    timestamp = datetime.strptime(log_entry["timestamp"], "%d/%m/%Y-%H:%M:%S.%f")
+    minute_key = timestamp.strftime("%Y-%m-%d %H:%M")  # Groups logs by minute
 
-    if timestamp not in timestamps_data:
-        timestamps_data[timestamp] = {}
-    timestamps_data[timestamp][classification] = timestamps_data[timestamp].get(classification, 0) + 1
+    # TensorFlow-based calculation for alerts per minute
+    minute_tensor = tf.constant([minute_key])  # Convert minute to TensorFlow tensor
+    alerts_tensor = tf.constant([alerts_per_minute.get(minute_key, 0) + 1], dtype=tf.float32)
 
-# Route to serve the dashboard
+    # Store computed alerts per minute
+    alerts_per_minute[minute_tensor.numpy()[0].decode()] = int(alerts_tensor.numpy()[0])
+
+    # Update severity breakdown based on priority (Pie Chart)
+    severity_counts[log_entry["priority"]] = severity_counts.get(log_entry["priority"], 0) + 1
+
 @app.route("/")
 def dashboard():
+    """Loads the main dashboard page."""
     return render_template("dashboard.html")
 
-# Handle incoming logs (from sendtodashboard.py)
 @app.route("/api/logs", methods=["POST"])
 def handle_logs():
+    """Receives logs from sendtodashboard.py and updates real-time charts."""
     log_entry = request.get_json()
-    if not log_entry or "timestamp" not in log_entry or "classification" not in log_entry:
-        return jsonify({"error": "Invalid log format"}), 400
-
-    log_data.append(log_entry)
-    process_log_entry(log_entry)
-
-    # Notify frontend for real-time updates
-    socketio.emit("update_charts")
+    log_data.append(log_entry)  # Store logs
+    process_log_entry(log_entry)  # Process alerts and severity
+    socketio.emit("update_charts")  # Notify frontend to refresh charts
     return jsonify({"message": "Log received"}), 200
 
-# Fetch chart data for the line chart
-@app.route("/api/chart-data")
-def chart_data_route():
-    timestamps = sorted(timestamps_data.keys())
-    datasets = {}
+@app.route("/api/alerts-over-time")
+def alerts_over_time():
+    """Provides processed alert data for the line chart."""
+    return jsonify({
+        "timestamps": list(alerts_per_minute.keys()),  # X-axis: Timestamps
+        "alerts": list(alerts_per_minute.values())  # Y-axis: Alert counts
+    })
 
-    for timestamp in timestamps:
-        for classification, count in timestamps_data[timestamp].items():
-            if classification not in datasets:
-                datasets[classification] = []
-            datasets[classification].append(count)
+@app.route("/api/severity-breakdown")
+def severity_breakdown():
+    """Provides severity distribution for the pie chart."""
+    return jsonify({
+        "labels": list(severity_counts.keys()),  # Labels: Priority categories
+        "values": list(severity_counts.values())  # Values: Count of each severity type
+    })
 
-    return jsonify({"timestamps": timestamps, "datasets": datasets})
-
-# Fetch pie chart data
-@app.route("/api/pie-data")
-def pie_data_route():
-    total_events = sum(classification_counts.values())
-    percentages = {k: (v / total_events) * 100 for k, v in classification_counts.items()} if total_events else {}
-
-    return jsonify({"labels": list(percentages.keys()), "percentages": list(percentages.values())})
-
-# Chatbot route to interact with Gemini 2.0 Flash model
 @app.route("/api/chat", methods=["POST"])
-def chat_with_gemini():
-    """Send chat message to Gemini 2.0 Flash model and get response"""
-    user_message = request.json.get("message")
-    if not user_message:
+def chat_with_rasa():
+    """Handles user messages and forwards them to Rasa chatbot."""
+    user_input = request.json.get("message")
+
+    if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    payload = {
-        "messages": [
-            {"role": "user", "content": user_message},
-            {"role": "system", "content": "You are an AI assistant for Suricata IDS logs."}
-        ],
-        "model": "gemini-2.0-flash"  # Model identifier for Gemini 2.0 Flash model
-    }
+    rasa_response = requests.post(RASA_API_URL, json={"sender": "user", "message": user_input})
 
-    headers = {
-        "Authorization": f"Bearer {GEMINI_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    response = requests.post(GEMINI_API_URL, json=payload, headers=headers)
-
-    if response.status_code == 200:
-        return jsonify({"response": response.json()})
+    if rasa_response.status_code == 200:
+        response_data = rasa_response.json()
+        chatbot_reply = response_data[0]["text"] if response_data and isinstance(response_data, list) and "text" in response_data[0] else "I didn't understand that."
     else:
-        return jsonify({"error": "Failed to get response from Gemini API", "details": response.text}), 500
+        chatbot_reply = "Error reaching chatbot."
 
-# Running the app
+    return jsonify({"response": chatbot_reply})
+
 if __name__ == "__main__":
     socketio.run(app, host="127.0.0.1", port=5000, debug=True)
