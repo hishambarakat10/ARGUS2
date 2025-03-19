@@ -9,33 +9,31 @@ LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 def parse_fast_log(line):
     """
     Parses a Suricata fast.log line and extracts relevant fields.
-    Also maps the priority to a human-readable description.
+    This version is adapted to match log lines like:
+    03/18/2025-04:55:16.293281  [**] [1:1003:2] SQL Injection Attempt Detected [**] [Classification: "SQL Injection Occured"] [Priority: 3] {TCP} 91.189.91.83:80 -> 192.168.2.4:41212
     """
-    pattern = r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)\s+\*\*\s+\[.*?\]\s+(\w+)\s+\*\*\s+\[Classification:\s\"(.*?)\"\]\s+\[Priority:\s(\d+)\].*?(\d+\.\d+\.\d+\.\d+):\d+\s->\s(\d+\.\d+\.\d+\.\d+):\d+"
-
+    pattern = (
+        r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)"         # Timestamp
+        r"\s+\[\*\*\]\s+"                                        # Literal [**]
+        r"\[.*?\]\s+"                                            # [1:1003:2] (ignored)
+        r"(.*?)\s+"                                             # Details (non-greedy to capture the alert text)
+        r"\[\*\*\]\s+"                                          # Literal [**]
+        r"\[Classification:\s+\"(.*?)\"\]\s+"                    # Classification (inside quotes)
+        r"\[Priority:\s+(\d+)\]\s+"                               # Priority (digits)
+        r"\{.*?\}\s+"                                           # Protocol info (e.g. {TCP}, ignored)
+        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                    # Source and destination IPs
+    )
     match = re.match(pattern, line)
-
     if match:
-        priority_mapping = {
-            "1": "Not Suspicious",
-            "2": "Potentially Suspicious",
-            "3": "Malicious Traffic"
-        }
-
-        log_entry = {
+        return {
             "timestamp": match.group(1),
-            "details": match.group(2),
-            "classification": match.group(3),
-            "priority": priority_mapping.get(match.group(4), "Unknown"),
+            "details": match.group(2).strip(),
+            "classification": match.group(3).strip(),
+            "priority": match.group(4),
             "src_ip": match.group(5),
             "dest_ip": match.group(6)
         }
-
-        # Ensure all required fields are present before sending
-        if all(log_entry.values()):
-            return log_entry
-
-    return None  # Return None if parsing fails or any field is missing
+    return None
 
 def stream_log(file_path):
     """ Reads the log file from the beginning and sends all logs continuously. """
