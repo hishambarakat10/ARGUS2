@@ -2,7 +2,6 @@ import os
 import requests
 import time
 import re
-import threading
 
 LOG_FILE = "/var/log/suricata/fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
@@ -16,13 +15,13 @@ def parse_fast_log(line):
     pattern = (
         r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)"         # Timestamp
         r"\s+\[\*\*\]\s+"                                        # Literal [**]
-        r"\[.*?\]\s+"                                            # Ignored bracketed data
+        r"\[.*?\]\s+"                                            # Ignored bracketed data (e.g., [1:1003:2])
         r"(.*?)\s+"                                             # Alert details (non-greedy)
         r"\[\*\*\]\s+"                                          # Literal [**]
         r"\[Classification:\s+\"(.*?)\"\]\s+"                    # Classification inside quotes
         r"\[Priority:\s+(\d+)\]\s+"                               # Priority (number)
-        r"\{.*?\}\s+"                                           # Protocol info (ignored)
-        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                    # Source and destination IPs
+        r"\{.*?\}\s+"                                           # Protocol info (ignored, e.g., {TCP})
+        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                    # Source and destination IP addresses
     )
     match = re.match(pattern, line)
     if match:
@@ -32,52 +31,43 @@ def parse_fast_log(line):
             "3": "Malicious Traffic"
         }
         priority = match.group(4)
-        priority_description = priority_mapping.get(priority, "Unknown")
         return {
             "timestamp": match.group(1),
             "details": match.group(2).strip(),
             "classification": match.group(3).strip(),
-            "priority": priority_description,
+            "priority": priority_mapping.get(priority, "Unknown"),
             "src_ip": match.group(5),
             "dest_ip": match.group(6)
         }
     else:
-        print("Failed to parse line:", line.strip())
-    return None
+        # Uncomment the following line for debugging if needed:
+        # print("Failed to parse line:", line.strip())
+        return None
 
-def send_all_logs():
+def follow_log(file_path):
     """
-    Reads the entire fast.log file and sends each parsed log entry to the API.
-    This function is scheduled to run every 2 minutes.
+    Continuously monitors the fast.log file for new log entries and sends them immediately.
     """
-    print("Reading entire log file and sending logs...")
-    try:
-        with open(LOG_FILE, "r") as file:
-            lines = file.readlines()
-    except Exception as e:
-        print("Error reading log file:", e)
-        # Schedule next try even if reading fails
-        threading.Timer(120, send_all_logs).start()
-        return
+    with open(file_path, "r") as file:
+        file.seek(0, os.SEEK_END)  # Move pointer to the end of the file
+        while True:
+            line = file.readline()
+            if not line:
+                # No new line; wait briefly and try again
+                time.sleep(0.1)
+                continue
 
-    sent_count = 0
-    for line in lines:
-        log_entry = parse_fast_log(line)
-        if log_entry:
-            response = requests.post(LOGS_API_URL, json=log_entry)
-            if response.status_code == 200:
-                print("Log sent successfully:", log_entry)
-                sent_count += 1
-            else:
-                print("Failed to send log:", response.status_code, response.text)
-    print(f"Completed sending logs from file. Total sent: {sent_count}")
-    # Schedule the next run in 2 minutes
-    threading.Timer(120, send_all_logs).start()
+            log_entry = parse_fast_log(line)
+            if log_entry:
+                try:
+                    response = requests.post(LOGS_API_URL, json=log_entry)
+                    if response.status_code == 200:
+                        print("Log sent:", log_entry)
+                    else:
+                        print("Error sending log:", response.status_code, response.text)
+                except Exception as e:
+                    print("Exception while sending log:", e)
 
 if __name__ == "__main__":
-    print("Starting log sender: Will send all logs (previous and new) every 2 minutes.")
-    # Start the periodic log sender after 2 minutes (first run happens immediately)
-    send_all_logs()
-    # Keep the main thread alive
-    while True:
-        time.sleep(60)
+    print("Monitoring fast.log for new logs...")
+    follow_log(LOG_FILE)
