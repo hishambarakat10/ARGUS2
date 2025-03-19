@@ -15,13 +15,13 @@ def parse_fast_log(line):
     pattern = (
         r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)"         # Timestamp
         r"\s+\[\*\*\]\s+"                                        # Literal [**]
-        r"\[.*?\]\s+"                                            # Ignored bracketed data
+        r"\[.*?\]\s+"                                            # Ignored bracketed data (e.g., [1:1003:2])
         r"(.*?)\s+"                                             # Alert details (non-greedy)
         r"\[\*\*\]\s+"                                          # Literal [**]
-        r"\[Classification:\s+\"(.*?)\"\]\s+"                    # Classification
-        r"\[Priority:\s+(\d+)\]\s+"                               # Priority
-        r"\{.*?\}\s+"                                           # Protocol info (ignored)
-        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                    # Source and destination IPs
+        r"\[Classification:\s+\"(.*?)\"\]\s+"                    # Classification inside quotes
+        r"\[Priority:\s+(\d+)\]\s+"                               # Priority (number)
+        r"\{.*?\}\s+"                                           # Protocol info (ignored, e.g., {TCP})
+        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                    # Source and destination IP addresses
     )
     match = re.match(pattern, line)
     if match:
@@ -45,30 +45,34 @@ def parse_fast_log(line):
 
 def follow_log(file_path):
     """
-    Continuously monitors fast.log for new lines and sends new logs immediately.
+    Continuously monitors the fast.log file for new log entries.
+    When a new line is added, it is parsed and, if valid,
+    immediately sent to the API endpoint.
     """
     with open(file_path, "r") as file:
         file.seek(0, os.SEEK_END)  # Start at the end of the file
         while True:
             line = file.readline()
-            if line:
-                print("Line read:", line.strip())  # Debug: print raw line
-                log_entry = parse_fast_log(line)
-                if log_entry:
-                    print("Parsed log:", log_entry)  # Debug: print parsed log
-                    try:
-                        response = requests.post(LOGS_API_URL, json=log_entry)
-                        if response.status_code == 200:
-                            print("Log sent:", log_entry)
-                        else:
-                            print("Error sending log:", response.status_code, response.text)
-                    except Exception as e:
-                        print("Exception while sending log:", e)
-                else:
-                    print("Log not parsed; skipping.")
+            if not line:
+                time.sleep(0.1)  # No new line; wait a bit and try again
+                continue
+
+            # Debug: Print the line that was read
+            print("Line read:", line.strip())
+            log_entry = parse_fast_log(line)
+            if log_entry:
+                print("Parsed log:", log_entry)
+                try:
+                    response = requests.post(LOGS_API_URL, json=log_entry)
+                    if response.status_code == 200:
+                        print("Log sent successfully:", log_entry)
+                    else:
+                        print("Error sending log:", response.status_code, response.text)
+                except Exception as e:
+                    print("Exception while sending log:", e)
             else:
-                time.sleep(0.1)
+                print("Log not parsed; skipping.")
 
 if __name__ == "__main__":
-    print("Monitoring fast.log for new logs...")
+    print("Monitoring fast.log for new logs and sending them immediately...")
     follow_log(LOG_FILE)
