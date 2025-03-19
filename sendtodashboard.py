@@ -9,19 +9,24 @@ LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 def parse_fast_log(line):
     """
     Parses a Suricata fast.log line and extracts relevant fields.
-    Example log:
-    03/18/2025-04:55:16.293281  [**] [1:1003:2] SQL Injection Attempt Detected [**] [Classification: "SQL Injection Occured"] [Priority: 3] {TCP} 91.189.91.83:80 -> 192.168.2.4:41212
+    
+    Example logs:
+      With quotes:
+      03/19/2025-13:54:22.351676  [**] [1:1003:2] SQL Injection Attempt Detected [**] [Classification: "SQL Injection Occured"] [Priority: 3] {TCP} 142.251.186.94:80 -> 192.168.2.4:56148
+      
+      Without quotes:
+      03/19/2025-13:54:08.151001  [**] [1:2231000:1] SURICATA QUIC failed decrypt [**] [Classification: Generic Protocol Command Decode] [Priority: 3] {UDP} 192.168.2.4:49019 -> 142.250.114.94:443
     """
     pattern = (
-        r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)"         # Timestamp
-        r"\s+\[\*\*\]\s+"                                        # Literal [**]
-        r"\[.*?\]\s+"                                            # Ignored bracketed data (e.g., [1:1003:2])
-        r"(.*?)\s+"                                             # Alert details (non-greedy)
-        r"\[\*\*\]\s+"                                          # Literal [**]
-        r"\[Classification:\s+\"(.*?)\"\]\s+"                    # Classification inside quotes
-        r"\[Priority:\s+(\d+)\]\s+"                               # Priority (number)
-        r"\{.*?\}\s+"                                           # Protocol info (ignored, e.g., {TCP})
-        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                    # Source and destination IP addresses
+        r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)"       # Timestamp
+        r"\s+\[\*\*\]\s+"                                      # Literal [**]
+        r"\[.*?\]\s+"                                          # Ignored bracketed data (e.g., [1:2231000:1])
+        r"(.*?)\s+"                                           # Alert details (non-greedy)
+        r"\[\*\*\]\s+"                                        # Literal [**]
+        r"\[Classification:\s+\"?(.*?)\"?\]\s+"                # Classification, optionally in quotes
+        r"\[Priority:\s+(\d+)\]\s+"                             # Priority (number)
+        r"\{.*?\}\s+"                                         # Protocol info (ignored)
+        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                  # Source and destination IPs
     )
     match = re.match(pattern, line)
     if match:
@@ -54,11 +59,10 @@ def follow_log(file_path):
         while True:
             line = file.readline()
             if not line:
-                time.sleep(0.1)  # No new line; wait a bit and try again
+                time.sleep(0.1)  # Wait briefly if no new line
                 continue
 
-            # Debug: Print the line that was read
-            print("Line read:", line.strip())
+            print("Line read:", line.strip())  # Debug: show raw line
             log_entry = parse_fast_log(line)
             if log_entry:
                 print("Parsed log:", log_entry)
