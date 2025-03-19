@@ -1,106 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suricata Dashboard</title>
-    
-    <!-- Load Chart.js for data visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <!-- Load Socket.io for real-time updates -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suricata Dashboard</title>
+  <!-- Load Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Load Socket.io for real-time updates -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
 </head>
 <body>
-    <!-- Line Chart Section -->
-    <div style="width: 600px; height: 300px">
-        <h2>Alerts Over Time (Line Chart)</h2>
-        <canvas id="lineChart"></canvas>  <!-- Canvas for line chart -->
-    </div>
+  <!-- Line Chart Section -->
+  <div style="width: 600px; height: 300px; margin-bottom: 30px;">
+    <h2>Alerts Over Time (Line Chart)</h2>
+    <canvas id="lineChart"></canvas>
+  </div>
 
-    <!-- Pie Chart Section -->
-    <div style="width: 600px; height: 300px">
-        <h2>Severity Breakdown (Pie Chart)</h2>
-        <canvas id="pieChart"></canvas>  <!-- Canvas for pie chart -->
-    </div>
+  <!-- Pie Chart Section -->
+  <div style="width: 600px; height: 300px; margin-bottom: 30px;">
+    <h2>Severity Breakdown (Pie Chart)</h2>
+    <canvas id="pieChart"></canvas>
+  </div>
 
-    <!-- Chatbot Section -->
-    <div style="width: 400px; height: 300px">
-        <h2>Chat with AI</h2>
-        <div id="chatbox" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px; margin-bottom: 10px"></div>
-        <input type="text" id="chatInput" placeholder="Type a message..." style="width: 80%">
-        <button onclick="sendMessage()">Send</button>  <!-- Send button for chatbot -->
-    </div>
+  <!-- Chatbot Section -->
+  <div style="width: 400px; height: 300px;">
+    <h2>Chat with AI</h2>
+    <div id="chatbox" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px; margin-bottom: 10px;"></div>
+    <input type="text" id="chatInput" placeholder="Type a message..." style="width: 80%;">
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
-    <script>
-        let lineChart, pieChart;  // Chart instances
+  <script>
+    let lineChart, pieChart;
 
-        function updateCharts() {
-            // Fetch and update the line chart (Alerts Over Time)
-            fetch('/api/alerts-over-time')
-                .then(response => response.json())
-                .then(data => {
-                    const lineCtx = document.getElementById('lineChart').getContext('2d');
-                    
-                    // Destroy old chart before creating a new one
-                    if (lineChart) lineChart.destroy();
+    // Function to update the line chart (assumed to be working)
+    function updateLineChart() {
+      // For demonstration, let's assume you already have the implementation.
+      // This can be similar to your previous implementation using the /api/chart-data endpoint.
+      fetch('/api/chart-data')
+        .then(response => response.json())
+        .then(data => {
+          const lineCtx = document.getElementById('lineChart').getContext('2d');
+          if (lineChart) lineChart.destroy();
+          lineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+              labels: data.timestamps,
+              datasets: Object.entries(data.datasets || {}).map(([classification, counts]) => ({
+                label: classification,
+                data: counts,
+                fill: false
+              }))
+            },
+            options: {
+              responsive: true,
+              scales: { y: { beginAtZero: true } }
+            }
+          });
+        })
+        .catch(error => console.error("Error fetching line chart data:", error));
+    }
 
-                    // Create a new line chart
-                    lineChart = new Chart(lineCtx, {
-                        type: 'line',
-                        data: {
-                            labels: data.timestamps,  // X-axis: Timestamps (Minutes)
-                            datasets: [{
-                                label: "Alerts Over Time",
-                                data: data.alerts,  // Y-axis: Alert counts per minute
-                                borderColor: "red",
-                                fill: false
-                            }]
-                        },
-                        options: { responsive: true, scales: { y: { beginAtZero: true } } }
-                    });
-                });
+    // Function to update the pie chart using /api/severity-breakdown
+    function updatePieChart() {
+      fetch('/api/severity-breakdown')
+        .then(response => response.json())
+        .then(data => {
+          console.log("Pie chart data received:", data); // Debug log
+          const pieCtx = document.getElementById('pieChart').getContext('2d');
+          if (pieChart) pieChart.destroy();
+          pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+              labels: data.labels,          // e.g., ["Not Suspicious", "Potentially Suspicious", "Malicious Traffic"]
+              datasets: [{
+                data: data.percentages,     // e.g., [12, 7, 5]
+                backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#33FFF5'],
+                borderColor: '#fff',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        })
+        .catch(error => console.error("Error fetching pie chart data:", error));
+    }
 
-            // Fetch and update the pie chart (Severity Breakdown)
-            fetch('/api/severity-breakdown')
-                .then(response => response.json())
-                .then(data => {
-                    const pieCtx = document.getElementById('pieChart').getContext('2d');
-                    
-                    // Destroy old chart before creating a new one
-                    if (pieChart) pieChart.destroy();
+    // Chatbot message sender function
+    function sendMessage() {
+      const input = document.getElementById("chatInput");
+      const message = input.value;
+      if (message.trim() === "") return;
+      const chatbox = document.getElementById("chatbox");
+      chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+      input.value = "";
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message })
+      })
+      .then(response => response.json())
+      .then(data => {
+        chatbox.innerHTML += `<div><strong>Rasa:</strong> ${data.response}</div>`;
+        chatbox.scrollTop = chatbox.scrollHeight;
+      })
+      .catch(error => console.error("Error sending chat message:", error));
+    }
 
-                    // Create a new pie chart
-                    pieChart = new Chart(pieCtx, {
-                        type: 'pie',
-                        data: {
-                            labels: data.labels,  // Severity labels
-                            datasets: [{
-                                data: data.values,  // Count of each severity level
-                                backgroundColor: ['#FF5733', '#33FF57', '#3357FF'],  // Colors for severity
-                                borderColor: '#fff',
-                                borderWidth: 1
-                            }]
-                        }
-                    });
-                });
-        }
+    // Establish a socket connection to listen for updates
+    const socket = io();
+    socket.on("update_charts", function() {
+      updateLineChart();
+      updatePieChart();
+    });
 
-        // Connect to WebSocket server
-        const socket = io();
-        socket.on("update_charts", updateCharts);  // Refresh charts when new data arrives
-
-        // Function to send user message to chatbot
-        function sendMessage() {
-            fetch('/api/chat', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ message: document.getElementById("chatInput").value }) 
-            })
-            .then(response => response.json())
-            .then(data => document.getElementById("chatbox").innerHTML += `<div><strong>Rasa:</strong> ${data.response}</div>`);
-        }
-
-        updateCharts();  // Load charts on page load
-    </script>
+    // Initial chart load
+    updateLineChart();
+    updatePieChart();
+  </script>
 </body>
 </html>
