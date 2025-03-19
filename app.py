@@ -3,53 +3,59 @@ import requests
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 import json
-# Import torch and Counter for PyTorch-based processing
 import torch
 from collections import Counter
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Data storage for logs and analytics
-log_data = []  # Stores log entries received from the log monitoring script
-classification_counts = {}  # Stores classification counts for log analysis
-timestamps_data = {}  # (Unused now, but kept if needed elsewhere)
+# Global data storage for logs and analytics
+log_data = []                 # List to store incoming log entries
+classification_counts = {}    # Dictionary to track counts for each classification
 
-# Existing log processing function remains unchanged
 def process_log_entry(log_entry):
-    """Processes and organizes log data for real-time visualization."""
+    """
+    Processes and organizes log data.
+    Updates the classification counts and stores the log entry.
+    """
     timestamp = log_entry["timestamp"]
     classification = log_entry["classification"]
-    
-    # Update classification counts (increment if exists, initialize if new)
+
+    # Update classification counts
     classification_counts[classification] = classification_counts.get(classification, 0) + 1
 
-    # Update log storage categorized by timestamp
-    if timestamp not in timestamps_data:
-        timestamps_data[timestamp] = {}
-    timestamps_data[timestamp][classification] = timestamps_data[timestamp].get(classification, 0) + 1
+    # Append log entry to global log list
+    log_data.append(log_entry)
 
-# Route for the main dashboard remains unchanged
 @app.route("/")
 def dashboard():
     return render_template("dashboard.html")
 
-# API route to receive logs remains unchanged
 @app.route("/api/logs", methods=["POST"])
 def handle_logs():
+    """
+    Receives logs from sendtodashboard.py, processes them,
+    and notifies the frontend to update charts.
+    """
     log_entry = request.get_json()
-    log_data.append(log_entry)
-    process_log_entry(log_entry)
-    socketio.emit("update_charts")
-    return jsonify({"message": "Log received"}), 200
+    if log_entry:
+        process_log_entry(log_entry)
+        socketio.emit("update_charts")
+        return jsonify({"message": "Log received"}), 200
+    else:
+        return jsonify({"error": "No log data provided"}), 400
 
-# API route to communicate with the Rasa chatbot remains unchanged
 @app.route("/api/chat", methods=["POST"])
 def chat_with_rasa():
+    """
+    Handles user messages by sending them to the Rasa chatbot
+    and returning the chatbot's response.
+    """
     user_input = request.json.get("message")
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
-    
+
+    # Send the user message to the Rasa chatbot
     rasa_response = requests.post("http://localhost:5005/webhooks/rest/webhook",
                                   json={"sender": "user", "message": user_input})
     if rasa_response.status_code == 200:
@@ -62,38 +68,39 @@ def chat_with_rasa():
         chatbot_reply = "Error reaching chatbot."
     return jsonify({"response": chatbot_reply})
 
-# Modified API route for line chart data using PyTorch calculations
-@app.route("/api/chart-data")
-def chart_data():
+@app.route("/api/alerts-over-time")
+def alerts_over_time():
     """
     Uses PyTorch to compute alerts over time.
     It extracts minute-level timestamps from log entries (assumes the first 16 characters of 'timestamp'),
-    counts the number of alerts per minute using Counter, converts the counts to a PyTorch tensor,
-    and returns the results as JSON.
+    counts the number of alerts per minute using Counter, converts the counts into a PyTorch tensor,
+    and returns the sorted timestamps and counts as JSON.
     """
-    # Extract minute-level timestamps (for example, "DD/MM/YYYY-HH:MM")
+    # Extract minute-level timestamps (e.g., "03/18/2025-04:55")
     minute_timestamps = [entry["timestamp"][:16] for entry in log_data]
+    # Count alerts per minute
     counts = Counter(minute_timestamps)
-    # Sort counts by timestamp (chronologically)
+    # Sort the counts chronologically
     sorted_items = sorted(counts.items())
     if sorted_items:
         timestamps, alert_counts = zip(*sorted_items)
     else:
         timestamps, alert_counts = [], []
-    # Convert the alert counts to a PyTorch tensor
+    # Convert counts to a PyTorch tensor for potential further processing
     alerts_tensor = torch.tensor(alert_counts, dtype=torch.int32)
-    # Convert tensor to a list for JSON serialization
+    # Convert tensor to a Python list for JSON serialization
     alerts_list = alerts_tensor.tolist()
     return jsonify({
         "timestamps": timestamps,
         "alerts": alerts_list
     })
 
-# (Optional) If you have a separate pie chart endpoint, leave it as is.
-@app.route("/api/pie-data")
-def pie_data():
-    # Your existing pie chart code here...
-    # For example, it might return classification breakdowns.
+@app.route("/api/severity-breakdown")
+def severity_breakdown():
+    """
+    Returns the severity breakdown of the logs based on the 'priority' field.
+    Uses the classification_counts dictionary.
+    """
     return jsonify({
         "labels": list(classification_counts.keys()),
         "percentages": list(classification_counts.values())
