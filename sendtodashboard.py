@@ -7,10 +7,6 @@ import threading
 LOG_FILE = "/var/log/suricata/fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 
-# Global buffer to hold parsed log entries
-buffer = []
-buffer_lock = threading.Lock()  # Protects access to the buffer
-
 def parse_fast_log(line):
     """
     Parses a Suricata fast.log line and extracts relevant fields.
@@ -20,13 +16,13 @@ def parse_fast_log(line):
     pattern = (
         r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)"         # Timestamp
         r"\s+\[\*\*\]\s+"                                        # Literal [**]
-        r"\[.*?\]\s+"                                            # Ignored bracketed data (e.g., [1:1003:2])
+        r"\[.*?\]\s+"                                            # Ignored bracketed data
         r"(.*?)\s+"                                             # Alert details (non-greedy)
         r"\[\*\*\]\s+"                                          # Literal [**]
         r"\[Classification:\s+\"(.*?)\"\]\s+"                    # Classification inside quotes
         r"\[Priority:\s+(\d+)\]\s+"                               # Priority (number)
-        r"\{.*?\}\s+"                                           # Protocol info (ignored, e.g., {TCP})
-        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                    # Source and destination IP addresses
+        r"\{.*?\}\s+"                                           # Protocol info (ignored)
+        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                    # Source and destination IPs
     )
     match = re.match(pattern, line)
     if match:
@@ -49,49 +45,39 @@ def parse_fast_log(line):
         print("Failed to parse line:", line.strip())
     return None
 
-def send_logs():
+def send_all_logs():
     """
-    Sends all accumulated logs in the buffer to the API and then clears the buffer.
-    This function is scheduled to run every 2 minutes using threading.Timer.
+    Reads the entire fast.log file and sends each parsed log entry to the API.
+    This function is scheduled to run every 2 minutes.
     """
-    global buffer
-    with buffer_lock:
-        logs_to_send = buffer.copy()
-        buffer.clear()
-    if logs_to_send:
-        print(f"Sending {len(logs_to_send)} log entries...")
-        for log_entry in logs_to_send:
+    print("Reading entire log file and sending logs...")
+    try:
+        with open(LOG_FILE, "r") as file:
+            lines = file.readlines()
+    except Exception as e:
+        print("Error reading log file:", e)
+        # Schedule next try even if reading fails
+        threading.Timer(120, send_all_logs).start()
+        return
+
+    sent_count = 0
+    for line in lines:
+        log_entry = parse_fast_log(line)
+        if log_entry:
             response = requests.post(LOGS_API_URL, json=log_entry)
             if response.status_code == 200:
                 print("Log sent successfully:", log_entry)
+                sent_count += 1
             else:
                 print("Failed to send log:", response.status_code, response.text)
-    else:
-        print("No logs to send at this time.")
-    # Schedule the next send in 2 minutes
-    threading.Timer(120, send_logs).start()
-
-def follow_log(file_path):
-    """
-    Continuously reads the fast.log file and appends parsed log entries to the global buffer.
-    """
-    with open(file_path, "r") as file:
-        file.seek(0, os.SEEK_END)  # Start at the end of the file
-        while True:
-            line = file.readline()
-            if line:
-                # Debug: print raw line
-                print("Line read:", line.strip())
-                log_entry = parse_fast_log(line)
-                if log_entry:
-                    print("Parsed log:", log_entry)
-                    with buffer_lock:
-                        buffer.append(log_entry)
-            else:
-                time.sleep(0.1)
+    print(f"Completed sending logs from file. Total sent: {sent_count}")
+    # Schedule the next run in 2 minutes
+    threading.Timer(120, send_all_logs).start()
 
 if __name__ == "__main__":
-    print("Monitoring fast.log and sending logs every 2 minutes using a background timer...")
-    # Start the periodic log sender after 2 minutes
-    threading.Timer(10, send_logs).start()
-    follow_log(LOG_FILE)
+    print("Starting log sender: Will send all logs (previous and new) every 2 minutes.")
+    # Start the periodic log sender after 2 minutes (first run happens immediately)
+    send_all_logs()
+    # Keep the main thread alive
+    while True:
+        time.sleep(60)
