@@ -48,7 +48,7 @@ def follow_log(file_path):
     Every 2 minutes, all accumulated logs are sent individually to the API.
     """
     buffer = []  # List to hold parsed log entries
-    next_send_time = time.time() + 120  # 2 minutes from now
+    next_send_time = time.time() + 10  # 2 minutes from now
     with open(file_path, "r") as file:
         file.seek(0, os.SEEK_END)  # Start reading at the end of file
         while True:
