@@ -33,24 +33,24 @@
   <script>
     let lineChart, pieChart;
 
-    // Function to update the line chart (assumed to be working)
+    // Function to update the line chart using /api/alerts-over-time endpoint
     function updateLineChart() {
-      // For demonstration, let's assume you already have the implementation.
-      // This can be similar to your previous implementation using the /api/chart-data endpoint.
-      fetch('/api/chart-data')
+      fetch('/api/alerts-over-time')
         .then(response => response.json())
         .then(data => {
           const lineCtx = document.getElementById('lineChart').getContext('2d');
           if (lineChart) lineChart.destroy();
+          // Create a single dataset using the alerts data
           lineChart = new Chart(lineCtx, {
             type: 'line',
             data: {
-              labels: data.timestamps,
-              datasets: Object.entries(data.datasets || {}).map(([classification, counts]) => ({
-                label: classification,
-                data: counts,
-                fill: false
-              }))
+              labels: data.timestamps,  // Use the timestamps from the JSON data
+              datasets: [{
+                label: "Alerts Over Time",
+                data: data.alerts,       // Use the alerts array from the JSON data
+                fill: false,
+                borderColor: 'red'
+              }]
             },
             options: {
               responsive: true,
@@ -61,12 +61,12 @@
         .catch(error => console.error("Error fetching line chart data:", error));
     }
 
-    // Function to update the pie chart using /api/severity-breakdown
+    // Function to update the pie chart using /api/severity-breakdown endpoint
     function updatePieChart() {
       fetch('/api/severity-breakdown')
         .then(response => response.json())
         .then(data => {
-          console.log("Pie chart data received:", data); // Debug log
+          console.log("Pie chart data received:", data); // Debug: log data to console
           const pieCtx = document.getElementById('pieChart').getContext('2d');
           if (pieChart) pieChart.destroy();
           pieChart = new Chart(pieCtx, {
@@ -89,7 +89,7 @@
         .catch(error => console.error("Error fetching pie chart data:", error));
     }
 
-    // Chatbot message sender function
+    // Function to send a chat message to the backend
     function sendMessage() {
       const input = document.getElementById("chatInput");
       const message = input.value;
@@ -110,7 +110,7 @@
       .catch(error => console.error("Error sending chat message:", error));
     }
 
-    // Establish a socket connection to listen for updates
+    // Establish a socket connection for real-time updates
     const socket = io();
     socket.on("update_charts", function() {
       updateLineChart();
