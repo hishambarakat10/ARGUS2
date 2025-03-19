@@ -6,6 +6,9 @@ import json
 import torch
 from collections import Counter
 
+# Import the Rasa chatbot helper function from a separate file.
+from rasa_chatbot import get_response
+
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -48,25 +51,17 @@ def handle_logs():
 @app.route("/api/chat", methods=["POST"])
 def chat_with_rasa():
     """
-    Handles user messages by sending them to the Rasa chatbot
-    and returning the chatbot's response.
+    Handles chat messages by calling the Rasa chatbot agent.
+    The message is passed to the get_response() function in rasa_chatbot.py,
+    and the agent's reply is returned as JSON.
     """
     user_input = request.json.get("message")
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    # Send the user message to the Rasa chatbot
-    rasa_response = requests.post("http://localhost:5005/webhooks/rest/webhook",
-                                  json={"sender": "user", "message": user_input})
-    if rasa_response.status_code == 200:
-        response_data = rasa_response.json()
-        if response_data and isinstance(response_data, list) and "text" in response_data[0]:
-            chatbot_reply = response_data[0]["text"]
-        else:
-            chatbot_reply = "I didn't understand that."
-    else:
-        chatbot_reply = "Error reaching chatbot."
-    return jsonify({"response": chatbot_reply})
+    # Get response from the Rasa agent running in the separate file.
+    response_text = get_response(user_input)
+    return jsonify({"response": response_text})
 
 @app.route("/api/alerts-over-time")
 def alerts_over_time():
