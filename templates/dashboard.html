@@ -33,7 +33,7 @@
   <script>
     let lineChart, pieChart;
 
-    // Function to update the line chart (assuming /api/alerts-over-time returns appropriate data)
+    // Function to update the line chart using data from /api/alerts-over-time
     function updateLineChart() {
       fetch('/api/alerts-over-time')
         .then(response => response.json())
@@ -43,10 +43,10 @@
           lineChart = new Chart(lineCtx, {
             type: 'line',
             data: {
-              labels: data.timestamps,
+              labels: data.timestamps, // e.g., ["03/19/2025-13:54:22", "03/19/2025-13:55:10", ...]
               datasets: [{
                 label: "Alerts Over Time",
-                data: data.alerts,
+                data: data.alerts,       // e.g., [1, 1, 1, ...] or aggregated counts per minute
                 fill: false,
                 borderColor: 'red'
               }]
@@ -60,44 +60,21 @@
         .catch(error => console.error("Error fetching line chart data:", error));
     }
 
-    // Function to update the pie chart using /api/severity-breakdown endpoint
+    // Function to update the pie chart using data from /api/severity-breakdown
     function updatePieChart() {
       fetch('/api/severity-breakdown')
         .then(response => response.json())
         .then(data => {
-          console.log("Pie chart data received:", data); // Debug: log data to console
-
-          // Define a legend mapping from descriptive string to number and color.
-          const legendMapping = {
-            "Not Suspicious": { number: "1", color: "green" },
-            "Potentially Suspicious": { number: "2", color: "orange" },
-            "Malicious Traffic": { number: "3", color: "red" }
-          };
-
-          // Transform the labels to include the numeric code
-          const transformedLabels = data.labels.map(label => {
-            if (legendMapping[label]) {
-              return label + " (" + legendMapping[label].number + ")";
-            }
-            return label;
-          });
-          // Create background colors based on the legend mapping
-          const backgroundColors = data.labels.map(label => {
-            if (legendMapping[label]) {
-              return legendMapping[label].color;
-            }
-            return '#CCCCCC'; // default color if label not found in legendMapping
-          });
-
+          console.log("Pie chart data received:", data); // Debug log
           const pieCtx = document.getElementById('pieChart').getContext('2d');
           if (pieChart) pieChart.destroy();
           pieChart = new Chart(pieCtx, {
             type: 'pie',
             data: {
-              labels: transformedLabels,
+              labels: data.labels,          // e.g., ["Not Suspicious", "Potentially Suspicious", "Malicious Traffic"]
               datasets: [{
-                data: data.percentages,
-                backgroundColor: backgroundColors,
+                data: data.percentages,     // e.g., [12, 7, 5]
+                backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#33FFF5'],
                 borderColor: '#fff',
                 borderWidth: 1
               }]
@@ -111,7 +88,7 @@
         .catch(error => console.error("Error fetching pie chart data:", error));
     }
 
-    // Function to send a chat message to the backend
+    // Function to send a chat message to the Flask /api/chat endpoint (which reroutes to Rasa)
     function sendMessage() {
       const input = document.getElementById("chatInput");
       const message = input.value;
@@ -132,7 +109,7 @@
       .catch(error => console.error("Error sending chat message:", error));
     }
 
-    // Establish a socket connection for real-time updates
+    // Establish a socket connection for real-time chart updates
     const socket = io();
     socket.on("update_charts", function() {
       updateLineChart();
