@@ -5,6 +5,8 @@ from flask_socketio import SocketIO, emit
 import json
 import torch
 from collections import Counter
+import threading
+import time
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -20,11 +22,7 @@ def process_log_entry(log_entry):
     """
     timestamp = log_entry["timestamp"]
     classification = log_entry["classification"]
-
-    # Update classification counts
     classification_counts[classification] = classification_counts.get(classification, 0) + 1
-
-    # Append log entry to global log list
     log_data.append(log_entry)
 
 @app.route("/")
@@ -34,8 +32,8 @@ def dashboard():
 @app.route("/api/logs", methods=["POST"])
 def handle_logs():
     """
-    Receives logs from sendtodashboard.py, processes them,
-    and notifies the frontend to update charts.
+    Receives logs (e.g., from sendtodashboard.py), processes them,
+    and emits a socket event to update charts.
     """
     log_entry = request.get_json()
     if log_entry:
@@ -48,20 +46,21 @@ def handle_logs():
 @app.route("/api/chat", methods=["POST"])
 def chat_with_rasa():
     """
-    Handles user messages by forwarding them to the Rasa chatbot server.
-    The message is sent to the Rasa server at 127.0.0.1:5005, and its response is returned.
+    Handles chat messages by forwarding them to the Rasa server running on your local machine.
     """
     user_input = request.json.get("message")
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    # Forward the chat message to the Rasa server's REST endpoint.
+    # Replace with your local machine's IP address where the Rasa server is running.
+    rasa_server_url = "http://192.168.1.216:5005/webhooks/rest/webhook"
     try:
-        rasa_response = requests.post("http://127.0.0.1:5005/webhooks/rest/webhook",
-                                      json={"sender": "user", "message": user_input})
+        rasa_response = requests.post(rasa_server_url,
+                                      json={"sender": "user", "message": user_input},
+                                      timeout=5)
     except Exception as e:
-        return jsonify({"response": f"Error connecting to Rasa server: {e}"})
-    
+        return jsonify({"response": f"Error connecting to Rasa server: {e}"}), 500
+
     if rasa_response.status_code == 200:
         response_data = rasa_response.json()
         if response_data and isinstance(response_data, list) and "text" in response_data[0]:
@@ -70,29 +69,24 @@ def chat_with_rasa():
             chatbot_reply = "I didn't understand that."
     else:
         chatbot_reply = "Error reaching chatbot."
+
     return jsonify({"response": chatbot_reply})
 
 @app.route("/api/alerts-over-time")
 def alerts_over_time():
     """
     Uses PyTorch to compute alerts over time.
-    It extracts minute-level timestamps from log entries (assumes the first 16 characters of 'timestamp'),
-    counts the number of alerts per minute using Counter, converts the counts into a PyTorch tensor,
-    and returns the sorted timestamps and counts as JSON.
+    It extracts minute-level timestamps from log entries, counts alerts per minute,
+    converts counts into a PyTorch tensor, and returns the sorted timestamps and counts as JSON.
     """
-    # Extract minute-level timestamps (e.g., "03/18/2025-04:55")
     minute_timestamps = [entry["timestamp"][:16] for entry in log_data]
-    # Count alerts per minute
     counts = Counter(minute_timestamps)
-    # Sort the counts chronologically
     sorted_items = sorted(counts.items())
     if sorted_items:
         timestamps, alert_counts = zip(*sorted_items)
     else:
         timestamps, alert_counts = [], []
-    # Convert counts to a PyTorch tensor for potential further processing
     alerts_tensor = torch.tensor(alert_counts, dtype=torch.int32)
-    # Convert tensor to a Python list for JSON serialization
     alerts_list = alerts_tensor.tolist()
     return jsonify({
         "timestamps": timestamps,
@@ -102,7 +96,7 @@ def alerts_over_time():
 @app.route("/api/severity-breakdown")
 def severity_breakdown():
     """
-    Returns the severity breakdown of the logs based on the 'priority' field.
+    Returns the severity breakdown based on the 'priority' field.
     Uses the classification_counts dictionary.
     """
     return jsonify({
@@ -110,5 +104,42 @@ def severity_breakdown():
         "percentages": list(classification_counts.values())
     })
 
+# --- New: Forward Real-Time Log Data from the VM's fast.log to Rasa ---
+
+# Import parse_fast_log from sendtodashboard.py to reuse your log parser.
+from sendtodashboard import parse_fast_log
+
+def forward_logs_to_rasa():
+    """
+    Continuously reads new lines from /var/log/suricata/fast.log on the VM,
+    parses them using parse_fast_log, and sends each parsed log entry to the Rasa server.
+    The Rasa endpoint (here, /api/receive_log_data) must be implemented in your Rasa server.
+    """
+    log_file_path = "/var/log/suricata/fast.log"  # Path on the VM
+    with open(log_file_path, "r") as file:
+        file.seek(0, os.SEEK_END)  # Start at the end to capture only new logs
+        while True:
+            line = file.readline()
+            if not line:
+                time.sleep(0.1)
+                continue
+            parsed = parse_fast_log(line)
+            if parsed:
+                try:
+                    # Replace with your local machine's IP where Rasa is running.
+                    requests.post("http://192.168.1.216:5005/api/receive_log_data",
+                                  json=parsed,
+                                  timeout=5)
+                    print("Forwarded log to Rasa:", parsed)
+                except Exception as e:
+                    print("Error forwarding log to Rasa:", e)
+            else:
+                print("Failed to parse log line:", line.strip())
+
+# Start a background thread to forward log data to Rasa in real time.
+log_thread = threading.Thread(target=forward_logs_to_rasa, daemon=True)
+log_thread.start()
+
 if __name__ == "__main__":
+    # Run the Flask-SocketIO server on 127.0.0.1:5000 on the VM.
     socketio.run(app, host="127.0.0.1", port=5000, debug=True)
