@@ -127,7 +127,7 @@ def forward_logs_to_rasa():
             if parsed:
                 try:
                     # Replace with your local machine's IP where Rasa is running.
-                    requests.post("http://192.168.1.216:5005/api/receive_log_data",
+                    requests.post("http://10.152.48.106:5005/api/receive_log_data",
                                   json=parsed,
                                   timeout=5)
                     print("Forwarded log to Rasa:", parsed)
