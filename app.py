@@ -53,7 +53,7 @@ def chat_with_rasa():
         return jsonify({"error": "No message provided"}), 400
 
     # Replace with your local machine's IP address where the Rasa server is running.
-    rasa_server_url = "http://192.168.1.216:5005/webhooks/rest/webhook"
+    rasa_server_url = "http://10.152.48.106:5005/webhooks/rest/webhook"
     try:
         rasa_response = requests.post(rasa_server_url,
                                       json={"sender": "user", "message": user_input},
