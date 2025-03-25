@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, emit
 import json
 import torch
@@ -46,14 +46,14 @@ def handle_logs():
 @app.route("/api/chat", methods=["POST"])
 def chat_with_rasa():
     """
-    Handles chat messages by forwarding them to the Rasa server running on your local machine.
+    Forwards user chat messages to the Rasa server running on your local machine.
     """
     user_input = request.json.get("message")
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    # Replace with your local machine's IP address where the Rasa server is running.
-    rasa_server_url = "http://10.152.48.106:5005/webhooks/rest/webhook"
+    # Replace with your local machine's IP address where Rasa is running.
+    rasa_server_url = "http://192.168.1.100:5005/webhooks/rest/webhook"
     try:
         rasa_response = requests.post(rasa_server_url,
                                       json={"sender": "user", "message": user_input},
@@ -104,20 +104,17 @@ def severity_breakdown():
         "percentages": list(classification_counts.values())
     })
 
-# --- New: Forward Real-Time Log Data from the VM's fast.log to Rasa ---
-
-# Import parse_fast_log from sendtodashboard.py to reuse your log parser.
+# --- New: Forward Real-Time Log Data from /var/log/suricata/fast.log to Rasa ---
 from sendtodashboard import parse_fast_log
 
 def forward_logs_to_rasa():
     """
     Continuously reads new lines from /var/log/suricata/fast.log on the VM,
     parses them using parse_fast_log, and sends each parsed log entry to the Rasa server.
-    The Rasa endpoint (here, /api/receive_log_data) must be implemented in your Rasa server.
     """
-    log_file_path = "/var/log/suricata/fast.log"  # Path on the VM
+    log_file_path = "/var/log/suricata/fast.log"
     with open(log_file_path, "r") as file:
-        file.seek(0, os.SEEK_END)  # Start at the end to capture only new logs
+        file.seek(0, os.SEEK_END)
         while True:
             line = file.readline()
             if not line:
@@ -126,8 +123,7 @@ def forward_logs_to_rasa():
             parsed = parse_fast_log(line)
             if parsed:
                 try:
-                    # Replace with your local machine's IP where Rasa is running.
-                    requests.post("http://10.152.48.106:5005/api/receive_log_data",
+                    requests.post("http://192.168.1.100:5005/api/receive_log_data",
                                   json=parsed,
                                   timeout=5)
                     print("Forwarded log to Rasa:", parsed)
@@ -136,10 +132,14 @@ def forward_logs_to_rasa():
             else:
                 print("Failed to parse log line:", line.strip())
 
-# Start a background thread to forward log data to Rasa in real time.
 log_thread = threading.Thread(target=forward_logs_to_rasa, daemon=True)
 log_thread.start()
 
+# --- Dummy Logout Endpoint ---
+@app.route("/logout")
+def logout():
+    # Implement logout functionality if needed; here, we just return a simple message.
+    return "Logout endpoint not implemented."
+
 if __name__ == "__main__":
-    # Run the Flask-SocketIO server on 127.0.0.1:5000 on the VM.
     socketio.run(app, host="127.0.0.1", port=5000, debug=True)
