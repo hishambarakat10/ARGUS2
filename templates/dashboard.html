@@ -11,8 +11,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
 </head>
 <body>
-   <!-- Top Navigation Bar -->
-   <div class="topnav">
+  <!-- Top Navigation Bar -->
+  <div class="topnav">
     <a href="#" class="no-link">Argus</a>
     <div class="topnav-right">
         <a class="nav-link" href="#Dashboard">Dashboard</a>
@@ -23,7 +23,7 @@
     </div>
   </div>
 
-  <!-- Main Dashboard Container -->
+  <!-- This container is for your main content (security logs, event cards, etc.) -->
   <div class="security-logs">
     <!-- Right side for Security Logs -->
     <div class="right-dashboard">
@@ -33,28 +33,7 @@
     </div>
   </div>
 
-  <!-- Embedded Dashboard Charts and Chat (from dashboard.html) -->
-  <div id="dashboard-charts" style="display: flex; flex-direction: column; align-items: center; gap: 30px; margin: 40px 0;">
-    <!-- Line Chart Section -->
-    <div style="width: 600px; height: 300px; margin-bottom: 30px;">
-      <h2>Alerts Over Time (Line Chart)</h2>
-      <canvas id="lineChart"></canvas>
-    </div>
-    <!-- Pie Chart Section -->
-    <div style="width: 600px; height: 300px; margin-bottom: 30px;">
-      <h2>Severity Breakdown (Pie Chart)</h2>
-      <canvas id="pieChart"></canvas>
-    </div>
-    <!-- Chatbot Section -->
-    <div style="width: 400px; height: 300px;">
-      <h2>Chat with AI</h2>
-      <div id="chatbox" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px; margin-bottom: 10px;"></div>
-      <input type="text" id="chatInput" placeholder="Type a message..." style="width: 80%;">
-      <button onclick="sendMessage()">Send</button>
-    </div>
-  </div>
-
-  <!-- Existing Content (Event Cards, etc.) -->
+  <!-- Existing main wrapper for your event cards -->
   <div class="main-wrapper">
     <div class="dashboard">
       <div class="card1">
@@ -112,8 +91,70 @@
     </div>
   </div>
 
-  <!-- Scripts for Dashboard Charts and Chat -->
+  <!-- ================== ADD YOUR CHARTS & CHAT SECTION AT THE BOTTOM ================== -->
+  <div id="charts-and-chat" style="display: flex; flex-direction: column; align-items: center; gap: 30px; margin: 40px 0;">
+    <!-- Line Chart Section -->
+    <div style="width: 600px; height: 300px; margin-bottom: 30px;">
+      <h2>Alerts Over Time (Line Chart)</h2>
+      <canvas id="lineChart"></canvas>
+    </div>
+
+    <!-- Pie Chart Section -->
+    <div style="width: 600px; height: 300px; margin-bottom: 30px;">
+      <h2>Severity Breakdown (Pie Chart)</h2>
+      <canvas id="pieChart"></canvas>
+    </div>
+
+    <!-- Chatbot Section -->
+    <div style="width: 400px; height: 300px;">
+      <h2>Chat with AI</h2>
+      <div id="chatbox" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px; margin-bottom: 10px;"></div>
+      <input type="text" id="chatInput" placeholder="Type a message..." style="width: 80%;">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  <!-- =============================================================================== -->
+
+  <!-- Scripts to handle logs, charts, and chat -->
   <script>
+    // Fetch Logs for "Recent Alerts"
+    function fetchLogs() {
+      fetch('/api/logs')
+        .then(response => response.json())
+        .then(logs => updateAlerts(logs));
+    }
+
+    function updateAlerts(logs) {
+      const alertsContainer = document.getElementById("alerts");
+      alertsContainer.innerHTML = "";
+
+      logs.forEach(log => {
+        const severityColor = getSeverityColor(log.classification);
+        const alertHTML = `
+          <div class="alert-box">
+            <div class="alert-text">
+              <p class="alert-title">${log.classification}</p>
+              <p class="alert-time">${log.timestamp}</p>
+            </div>
+            <div class="alert-status" style="background-color: ${severityColor};"></div>
+          </div>
+        `;
+        alertsContainer.innerHTML += alertHTML;
+      });
+
+      document.getElementById("lastUpdatedTime").textContent = new Date().toLocaleString();
+    }
+
+    function getSeverityColor(classification) {
+      // Example classification-based coloring:
+      if (classification.toLowerCase().includes("malicious")) return "red";
+      if (classification.toLowerCase().includes("suspicious")) return "orange";
+      return "green"; // default
+    }
+
+    setInterval(fetchLogs, 5000);
+
+    // Charts & Chat from the original dashboard code
     let lineChart, pieChart;
 
     // Function to update the line chart using data from /api/alerts-over-time
@@ -126,10 +167,10 @@
           lineChart = new Chart(lineCtx, {
             type: 'line',
             data: {
-              labels: data.timestamps, // e.g., ["03/19/2025-13:54:22", "03/19/2025-13:55:10", ...]
+              labels: data.timestamps,
               datasets: [{
                 label: "Alerts Over Time",
-                data: data.alerts,       // e.g., [1, 1, 1, ...] or aggregated counts per minute
+                data: data.alerts,
                 fill: false,
                 borderColor: 'red'
               }]
@@ -148,15 +189,15 @@
       fetch('/api/severity-breakdown')
         .then(response => response.json())
         .then(data => {
-          console.log("Pie chart data received:", data); // Debug log
+          console.log("Pie chart data received:", data);
           const pieCtx = document.getElementById('pieChart').getContext('2d');
           if (pieChart) pieChart.destroy();
           pieChart = new Chart(pieCtx, {
             type: 'pie',
             data: {
-              labels: data.labels,          // e.g., ["Not Suspicious", "Potentially Suspicious", "Malicious Traffic"]
+              labels: data.labels,
               datasets: [{
-                data: data.percentages,     // e.g., [12, 7, 5]
+                data: data.percentages,
                 backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#33FFF5'],
                 borderColor: '#fff',
                 borderWidth: 1
@@ -171,7 +212,7 @@
         .catch(error => console.error("Error fetching pie chart data:", error));
     }
 
-    // Function to send a chat message to the Flask /api/chat endpoint (which reroutes to Rasa)
+    // Function to handle chat messages
     function sendMessage() {
       const input = document.getElementById("chatInput");
       const message = input.value;
@@ -192,14 +233,15 @@
       .catch(error => console.error("Error sending chat message:", error));
     }
 
-    // Establish a socket connection for real-time chart updates
+    // Socket for real-time chart updates
     const socket = io();
     socket.on("update_charts", function() {
       updateLineChart();
       updatePieChart();
     });
 
-    // Initial chart load
+    // Initial loads
+    fetchLogs();
     updateLineChart();
     updatePieChart();
   </script>
