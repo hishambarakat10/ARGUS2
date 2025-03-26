@@ -1,0 +1,6 @@
+03/26/2025-17:37:50.928743  [**] [1:1015:2] Potential Rogue DHCP Server [**] [Classification: "Rogue DHCP Server Detected"] [Priority: 2] {UDP} 192.168.2.3:67 -> 192.168.2.4:68
+03/26/2025-17:37:50.928743  [**] [1:1020:1] Fake DHCP Server from Rogue AP [**] [Classification: "Rogue Access Point Detected"] [Priority: 2] {UDP} 192.168.2.3:67 -> 192.168.2.4:68
+03/26/2025-17:38:36.105926  [**] [1:1015:2] Potential Rogue DHCP Server [**] [Classification: "Rogue DHCP Server Detected"] [Priority: 2] {UDP} 192.168.2.3:67 -> 255.255.255.255:68
+03/26/2025-17:38:36.105926  [**] [1:1020:1] Fake DHCP Server from Rogue AP [**] [Classification: "Rogue Access Point Detected"] [Priority: 2] {UDP} 192.168.2.3:67 -> 255.255.255.255:68
+03/26/2025-17:39:38.377811  [**] [1:2231000:1] SURICATA QUIC failed decrypt [**] [Classification: Generic Protocol Command Decode] [Priority: 3] {UDP} 192.168.2.4:36856 -> 34.117.188.166:443
+03/26/2025-17:44:38.543476  [**] [1:2231000:1] SURICATA QUIC failed decrypt [**] [Classification: Generic Protocol Command Decode] [Priority: 3] {UDP} 192.168.2.4:52726 -> 34.110.138.217:443
