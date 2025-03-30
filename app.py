@@ -77,7 +77,7 @@ def handle_logs():
     log_entry = request.get_json()
     if log_entry:
         process_log_entry(log_entry)
-        socketio.emit("update_charts", broadcast=True)
+        socketio.emit("update_charts", to='*')
         return jsonify({"message": "Log received"}), 200
     return jsonify({"error": "No log data provided"}), 400
 
