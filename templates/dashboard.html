@@ -93,13 +93,13 @@
 
   <!-- Charts + Chatbot Section -->
   <div id="charts-and-chat">
-    <div>
+    <div style="width: 100%;">
       <h2>Alerts Over Time</h2>
-      <canvas id="lineChart"></canvas>
+      <canvas id="lineChart" width="600" height="250"></canvas>
     </div>
-    <div>
+    <div style="width: 100%;">
       <h2>Severity Breakdown</h2>
-      <canvas id="pieChart"></canvas>
+      <canvas id="pieChart" width="600" height="250"></canvas>
     </div>
     <div style="width: 300px;">
       <h2>User-Friendly ChatBot</h2>
@@ -109,12 +109,13 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- JavaScript -->
   <script>
+    let lineChart, pieChart;
+
     function getSeverityColor(classification) {
       const lower = classification.toLowerCase();
-      if (lower.includes("generic protocol command decode")) return "green";
-      return "red";
+      return lower.includes("generic protocol command decode") ? "green" : "red";
     }
 
     function updateAlerts(logs) {
@@ -143,8 +144,10 @@
         .then(response => response.json())
         .then(data => {
           const ctx = document.getElementById('lineChart').getContext('2d');
-          if (window.lineChart) window.lineChart.destroy();
-          window.lineChart = new Chart(ctx, {
+          if (lineChart && typeof lineChart.destroy === 'function') {
+            lineChart.destroy();
+          }
+          lineChart = new Chart(ctx, {
             type: 'line',
             data: {
               labels: data.timestamps,
@@ -152,15 +155,36 @@
                 label: "Alerts Over Time",
                 data: data.alerts,
                 borderColor: 'red',
-                fill: false
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
               }]
             },
             options: {
               responsive: true,
-              scales: { y: { beginAtZero: true } }
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Time'
+                  },
+                  ticks: {
+                    autoSkip: true,
+                    maxTicksLimit: 8
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Alerts'
+                  }
+                }
+              }
             }
           });
-        });
+        })
+        .catch(err => console.error("Line chart error:", err));
     }
 
     function updatePieChart() {
@@ -168,8 +192,10 @@
         .then(response => response.json())
         .then(data => {
           const ctx = document.getElementById('pieChart').getContext('2d');
-          if (window.pieChart) window.pieChart.destroy();
-          window.pieChart = new Chart(ctx, {
+          if (pieChart && typeof pieChart.destroy === 'function') {
+            pieChart.destroy();
+          }
+          pieChart = new Chart(ctx, {
             type: 'pie',
             data: {
               labels: data.labels,
@@ -182,10 +208,23 @@
             },
             options: {
               responsive: true,
-              maintainAspectRatio: false
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              }
             }
           });
-        });
+        })
+        .catch(err => console.error("Pie chart error:", err));
+    }
+
+    function fetchLogs() {
+      fetch('/api/logs')
+        .then(response => response.json())
+        .then(logs => updateAlerts(logs))
+        .catch(err => console.error("Log fetch error:", err));
     }
 
     function sendMessage() {
@@ -207,33 +246,24 @@
       });
     }
 
-    // SocketIO Setup
     const socket = io({ transports: ['websocket'] });
 
     socket.on("connect", () => {
       console.log("✅ Socket connected");
     });
 
-    socket.on("update_charts", function () {
-      console.log("📊 update_charts received from server");
+    socket.on("update_charts", () => {
+      console.log("📊 update_charts received");
       updateLineChart();
       updatePieChart();
       fetchLogs();
     });
 
-    // Initial chart + alerts load
-    function fetchLogs() {
-      fetch('/api/logs')
-        .then(response => response.json())
-        .then(logs => updateAlerts(logs));
-    }
-
-    fetchLogs();
     updateLineChart();
     updatePieChart();
+    fetchLogs();
     setInterval(fetchLogs, 5000);
 
-    // Theme Toggle
     document.addEventListener('DOMContentLoaded', () => {
       const theme = localStorage.getItem('theme');
       if (theme === 'dark') {
