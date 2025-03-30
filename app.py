@@ -36,7 +36,6 @@ def check_user_credentials(username, password):
 
 @app.route("/")
 def root():
-    """Redirect to login or dashboard based on session"""
     if 'logged_in' in session:
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
@@ -62,7 +61,6 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
-    """Main dashboard view"""
     if 'logged_in' not in session:
         return redirect(url_for('login'))
     return render_template("dashboard.html")
