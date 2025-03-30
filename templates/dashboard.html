@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Event Cards Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Socket.io -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
 </head>
 <body>
   <!-- Top Navigation Bar -->
@@ -25,7 +23,7 @@
 
   <!-- Dashboard Grid Layout -->
   <div class="dashboard-grid">
-    <!-- Left: Cards + Stats -->
+    <!-- Left Column -->
     <div class="main-wrapper">
       <div class="dashboard">
         <div class="card1">
@@ -83,7 +81,7 @@
       </div>
     </div>
 
-    <!-- Right: Alerts -->
+    <!-- Right Column: Recent Alerts -->
     <div class="security-logs">
       <div class="right-dashboard">
         <h1 class="dashboard-title">Recent Alerts</h1>
@@ -93,18 +91,16 @@
     </div>
   </div>
 
-  <!-- ================== CHARTS & CHAT SECTION ================== -->
+  <!-- Charts + Chatbot Section -->
   <div id="charts-and-chat">
     <div>
       <h2>Alerts Over Time</h2>
       <canvas id="lineChart"></canvas>
     </div>
-
     <div>
       <h2>Severity Breakdown</h2>
       <canvas id="pieChart"></canvas>
     </div>
-
     <div style="width: 300px;">
       <h2>User-Friendly ChatBot</h2>
       <div id="chatbox"></div>
@@ -112,14 +108,13 @@
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
-  <!-- =========================================================== -->
 
-  <!-- JavaScript Section -->
+  <!-- Scripts -->
   <script>
-    function fetchLogs() {
-      fetch('/api/logs')
-        .then(response => response.json())
-        .then(logs => updateAlerts(logs));
+    function getSeverityColor(classification) {
+      const lower = classification.toLowerCase();
+      if (lower.includes("generic protocol command decode")) return "green";
+      return "red";
     }
 
     function updateAlerts(logs) {
@@ -143,21 +138,13 @@
       document.getElementById("lastUpdatedTime").textContent = new Date().toLocaleString();
     }
 
-    function getSeverityColor(classification) {
-      if (classification.toLowerCase().includes("malicious")) return "red";
-      if (classification.toLowerCase().includes("suspicious")) return "orange";
-      return "green";
-    }
-
-    let lineChart, pieChart;
-
     function updateLineChart() {
       fetch('/api/alerts-over-time')
         .then(response => response.json())
         .then(data => {
           const ctx = document.getElementById('lineChart').getContext('2d');
-          if (lineChart) lineChart.destroy();
-          lineChart = new Chart(ctx, {
+          if (window.lineChart) window.lineChart.destroy();
+          window.lineChart = new Chart(ctx, {
             type: 'line',
             data: {
               labels: data.timestamps,
@@ -181,8 +168,8 @@
         .then(response => response.json())
         .then(data => {
           const ctx = document.getElementById('pieChart').getContext('2d');
-          if (pieChart) pieChart.destroy();
-          pieChart = new Chart(ctx, {
+          if (window.pieChart) window.pieChart.destroy();
+          window.pieChart = new Chart(ctx, {
             type: 'pie',
             data: {
               labels: data.labels,
@@ -220,20 +207,33 @@
       });
     }
 
-    const socket = io();
-    socket.on("update_charts", () => {
+    // SocketIO Setup
+    const socket = io({ transports: ['websocket'] });
+
+    socket.on("connect", () => {
+      console.log("✅ Socket connected");
+    });
+
+    socket.on("update_charts", function () {
+      console.log("📊 update_charts received from server");
       updateLineChart();
       updatePieChart();
+      fetchLogs();
     });
+
+    // Initial chart + alerts load
+    function fetchLogs() {
+      fetch('/api/logs')
+        .then(response => response.json())
+        .then(logs => updateAlerts(logs));
+    }
 
     fetchLogs();
     updateLineChart();
     updatePieChart();
     setInterval(fetchLogs, 5000);
-  </script>
 
-  <!-- Dark Mode Script -->
-  <script>
+    // Theme Toggle
     document.addEventListener('DOMContentLoaded', () => {
       const theme = localStorage.getItem('theme');
       if (theme === 'dark') {
