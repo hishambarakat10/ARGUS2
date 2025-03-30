@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Event Cards Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <!-- Load Chart.js for data visualization -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Load Socket.io for real-time updates -->
+  <!-- Socket.io -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
 </head>
 <body>
@@ -15,97 +15,96 @@
   <div class="topnav">
     <a href="#" class="no-link">Argus</a>
     <div class="topnav-right">
-        <a class="nav-link" href="#Dashboard">Dashboard</a>
-        <a class="nav-link" href="#Alerts">Alerts</a>
-        <a class="nav-link" href="#Settings">Settings</a>
-        <!-- Logout Button -->
-        <a class="nav-link logout-link" href="{{ url_for('logout') }}">Logout</a>
+      <a class="nav-link" href="#Dashboard">Dashboard</a>
+      <a class="nav-link" href="#Alerts">Alerts</a>
+      <a class="nav-link" href="#Settings">Settings</a>
+      <a class="nav-link logout-link" href="{{ url_for('logout') }}">Logout</a>
+      <button id="theme-toggle" class="theme-btn">🌙</button>
     </div>
   </div>
 
-  <!-- This container is for your main content (security logs, event cards, etc.) -->
-  <div class="security-logs">
-    <!-- Right side for Security Logs -->
-    <div class="right-dashboard">
-      <h1 class="dashboard-title">Recent Alerts</h1>
-      <p class="last-updated">Last Updated Time: <span id="lastUpdatedTime"></span></p>
-      <div id="alerts" class="alerts-container"></div>
+  <!-- Dashboard Grid Layout -->
+  <div class="dashboard-grid">
+    <!-- Left: Cards + Stats -->
+    <div class="main-wrapper">
+      <div class="dashboard">
+        <div class="card1">
+          <div class="card-title">ALL<br>EVENTS</div>
+          <div class="card-number">7842</div>
+        </div>
+        <div class="card2">
+          <div class="card-title">WINDOW<br>EVENTS</div>
+          <div class="card-number">0</div>
+          <div class="all-window"><a href="allwindows.html">view all</a></div>
+        </div>
+        <div class="card3">
+          <div class="card-title">SYSLOG<br>EVENTS</div>
+          <div class="card-number">53</div>
+          <div class="all-syslog"><a href="allsyslogs.html">view all</a></div>
+        </div>
+        <div class="card4">
+          <div class="card-title">ALL<br>DEVICES</div>
+          <div class="card-number">4</div>
+          <div class="all-devices"><a href="alldevices.html">view all</a></div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="card">
+          <div class="left-section">
+            <h3>WINSPC-01</h3>
+            <span>CPU Health</span>
+          </div>
+          <div class="circle-wrap">
+            <svg viewBox="0 0 100 100">
+              <circle class="circle-bg" cx="50" cy="50" r="44"></circle>
+              <circle class="circle-progress" cx="50" cy="50" r="44"></circle>
+            </svg>
+            <div class="circle-text">92%</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="left-section">
+            <h3>WINSPC-01</h3>
+            <span>SSH</span><br>
+            <span>Telnet</span><br>
+            <span>HTTP</span><br>
+            <span>FTP</span>
+          </div>
+          <div class="right-section">
+            <h3>Open Ports</h3>
+            <span>Port 22</span><br>
+            <span>Port 23</span><br>
+            <span>Port 80</span><br>
+            <span>Port 21</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Alerts -->
+    <div class="security-logs">
+      <div class="right-dashboard">
+        <h1 class="dashboard-title">Recent Alerts</h1>
+        <p class="last-updated">Last Updated Time: <span id="lastUpdatedTime"></span></p>
+        <div id="alerts" class="alerts-container"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Existing main wrapper for your event cards -->
-  <div class="main-wrapper">
-    <div class="dashboard">
-      <div class="card1">
-        <div class="card-title">ALL<br>EVENTS</div>
-        <div class="card-number">7842</div>
-      </div>
-      <div class="card2">
-        <div class="card-title">WINDOW<br>EVENTS</div>
-        <div class="card-number">0</div>
-        <div class="all-window"><a href="allwindows.html">view all</a></div>
-      </div>
-      <div class="card3">
-        <div class="card-title">SYSLOG<br>EVENTS</div>
-        <div class="card-number">53</div>
-        <div class="all-syslog"><a href="allsyslogs.html">view all</a></div>
-      </div>
-      <div class="card4">
-        <div class="card-title">ALL<br>DEVICES</div>
-        <div class="card-number">4</div>
-        <div class="all-devices"><a href="alldevices.html">view all</a></div>
-      </div>
-    </div>
-  
-    <div class="container">
-      <div class="card">
-        <div class="left-section">
-          <h3>WINSPC-01</h3>
-          <span>CPU Health</span>
-        </div>
-        <div class="circle-wrap">
-          <svg viewBox="0 0 100 100">
-            <circle class="circle-bg" cx="50" cy="50" r="44"></circle>
-            <circle class="circle-progress" cx="50" cy="50" r="44"></circle>
-          </svg>
-          <div class="circle-text">92%</div>
-        </div>
-      </div>
-  
-      <div class="card">
-        <div class="left-section">
-          <h3>WINSPC-01</h3>
-          <span>SSH</span>
-          <span>Telnet</span>
-          <span>HTTP</span>
-          <span>FTP</span>
-        </div>
-        <div class="right-section">
-          <h3>OPEN PORTS</h3>
-          <span>Port 22</span>
-          <span>Port 23</span>
-          <span>Port 80</span>
-          <span>Port 21</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================== ADD YOUR CHARTS & CHAT SECTION AT THE BOTTOM ================== -->
+  <!-- ================== CHARTS & CHAT SECTION ================== -->
   <div id="charts-and-chat">
-    <!-- Line Chart Section -->
     <div>
-      <h2>Alerts Over Time (Line Chart)</h2>
+      <h2>Alerts Over Time</h2>
       <canvas id="lineChart"></canvas>
     </div>
 
-    <!-- Pie Chart Section -->
     <div>
-      <h2>Severity Breakdown (Pie Chart)</h2>
+      <h2>Severity Breakdown</h2>
       <canvas id="pieChart"></canvas>
     </div>
 
-    <!-- Chatbot Section -->
     <div style="width: 300px;">
       <h2>User-Friendly ChatBot</h2>
       <div id="chatbox"></div>
@@ -113,11 +112,10 @@
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
-  <!-- =============================================================================== -->
+  <!-- =========================================================== -->
 
-  <!-- Scripts to handle logs, charts, and chat -->
+  <!-- JavaScript Section -->
   <script>
-    // Fetch Logs for "Recent Alerts"
     function fetchLogs() {
       fetch('/api/logs')
         .then(response => response.json())
@@ -146,33 +144,28 @@
     }
 
     function getSeverityColor(classification) {
-      // Example classification-based coloring:
       if (classification.toLowerCase().includes("malicious")) return "red";
       if (classification.toLowerCase().includes("suspicious")) return "orange";
-      return "green"; // default
+      return "green";
     }
 
-    setInterval(fetchLogs, 5000);
-
-    // Charts & Chat from the original dashboard code
     let lineChart, pieChart;
 
-    // Function to update the line chart using data from /api/alerts-over-time
     function updateLineChart() {
       fetch('/api/alerts-over-time')
         .then(response => response.json())
         .then(data => {
-          const lineCtx = document.getElementById('lineChart').getContext('2d');
+          const ctx = document.getElementById('lineChart').getContext('2d');
           if (lineChart) lineChart.destroy();
-          lineChart = new Chart(lineCtx, {
+          lineChart = new Chart(ctx, {
             type: 'line',
             data: {
               labels: data.timestamps,
               datasets: [{
                 label: "Alerts Over Time",
                 data: data.alerts,
-                fill: false,
-                borderColor: 'red'
+                borderColor: 'red',
+                fill: false
               }]
             },
             options: {
@@ -180,19 +173,16 @@
               scales: { y: { beginAtZero: true } }
             }
           });
-        })
-        .catch(error => console.error("Error fetching line chart data:", error));
+        });
     }
 
-    // Function to update the pie chart using data from /api/severity-breakdown
     function updatePieChart() {
       fetch('/api/severity-breakdown')
         .then(response => response.json())
         .then(data => {
-          console.log("Pie chart data received:", data);
-          const pieCtx = document.getElementById('pieChart').getContext('2d');
+          const ctx = document.getElementById('pieChart').getContext('2d');
           if (pieChart) pieChart.destroy();
-          pieChart = new Chart(pieCtx, {
+          pieChart = new Chart(ctx, {
             type: 'pie',
             data: {
               labels: data.labels,
@@ -208,11 +198,9 @@
               maintainAspectRatio: false
             }
           });
-        })
-        .catch(error => console.error("Error fetching pie chart data:", error));
+        });
     }
 
-    // Function to handle chat messages
     function sendMessage() {
       const input = document.getElementById("chatInput");
       const message = input.value;
@@ -229,21 +217,36 @@
       .then(data => {
         chatbox.innerHTML += `<div><strong>Rasa:</strong> ${data.response}</div>`;
         chatbox.scrollTop = chatbox.scrollHeight;
-      })
-      .catch(error => console.error("Error sending chat message:", error));
+      });
     }
 
-    // Socket for real-time chart updates
     const socket = io();
-    socket.on("update_charts", function() {
+    socket.on("update_charts", () => {
       updateLineChart();
       updatePieChart();
     });
 
-    // Initial loads
     fetchLogs();
     updateLineChart();
     updatePieChart();
+    setInterval(fetchLogs, 5000);
+  </script>
+
+  <!-- Dark Mode Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'dark') {
+        document.body.classList.add('dark');
+        document.getElementById('theme-toggle').textContent = '🌞';
+      }
+    });
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.getElementById('theme-toggle').textContent = isDark ? '🌞' : '🌙';
+    });
   </script>
 </body>
 </html>
