@@ -4,47 +4,51 @@ import json
 import torch
 import threading
 import time
+import sqlite3
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
 from flask_socketio import SocketIO
 from collections import Counter
 from sendtodashboard import parse_fast_log
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key'  # Replace with a real secret key
+app.secret_key = 'your-secret-key'  # Change this in production!
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 log_data = []
 classification_counts = {}
 
-# Dummy credentials (replace with database check if needed)
-USER_CREDENTIALS = {
-    "admin": "password123"
-}
+# ============================
+# USER AUTH USING users.db
+# ============================
 
-def process_log_entry(log_entry):
-    timestamp = log_entry["timestamp"]
-    classification = log_entry["classification"]
-    classification_counts[classification] = classification_counts.get(classification, 0) + 1
-    log_data.append(log_entry)
+def check_user_credentials(username, password):
+    """Check credentials in users.db (SQLite)"""
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
+    user = cursor.fetchone()
+    conn.close()
+    return user
+
+# ============================
+# FLASK ROUTES
+# ============================
 
 @app.route("/")
 def root():
+    """Redirect to login or dashboard based on session"""
     if 'logged_in' in session:
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
-@app.route("/dashboard")
-def dashboard():
-    if 'logged_in' not in session:
-        return redirect(url_for('login'))
-    return render_template("dashboard.html")
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """Login page"""
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
+        user = check_user_credentials(username, password)
+        if user:
             session["logged_in"] = True
             return redirect(url_for("dashboard"))
         flash("Invalid username or password", "error")
@@ -52,8 +56,20 @@ def login():
 
 @app.route("/logout")
 def logout():
+    """Logout route"""
     session.pop("logged_in", None)
     return redirect(url_for("login"))
+
+@app.route("/dashboard")
+def dashboard():
+    """Main dashboard view"""
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
+    return render_template("dashboard.html")
+
+# ============================
+# API ROUTES
+# ============================
 
 @app.route("/api/logs", methods=["POST"])
 def handle_logs():
@@ -108,9 +124,21 @@ def severity_breakdown():
         "percentages": list(classification_counts.values())
     })
 
-# Background log forwarding
+# ============================
+# LOG PROCESSING + THREAD
+# ============================
+
+def process_log_entry(log_entry):
+    timestamp = log_entry["timestamp"]
+    classification = log_entry["classification"]
+    classification_counts[classification] = classification_counts.get(classification, 0) + 1
+    log_data.append(log_entry)
+
 def forward_logs_to_rasa():
     log_file_path = "/var/log/suricata/fast.log"
+    if not os.path.exists(log_file_path):
+        print(f"File not found: {log_file_path}")
+        return
     with open(log_file_path, "r") as file:
         file.seek(0, os.SEEK_END)
         while True:
@@ -128,6 +156,10 @@ def forward_logs_to_rasa():
 
 log_thread = threading.Thread(target=forward_logs_to_rasa, daemon=True)
 log_thread.start()
+
+# ============================
+# START APP
+# ============================
 
 if __name__ == "__main__":
     socketio.run(app, host="127.0.0.1", port=5000, debug=True)
