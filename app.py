@@ -11,18 +11,17 @@ from collections import Counter
 from sendtodashboard import parse_fast_log
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key'  # Change this in production!
+app.secret_key = 'your-secret-key'  # Replace this with a secure random key
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 log_data = []
 classification_counts = {}
 
 # ============================
-# USER AUTH USING users.db
+# DATABASE AUTHENTICATION
 # ============================
 
 def check_user_credentials(username, password):
-    """Check credentials in users.db (SQLite)"""
     conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
@@ -31,18 +30,25 @@ def check_user_credentials(username, password):
     return user
 
 # ============================
-# FLASK ROUTES
+# GLOBAL LOGIN ENFORCEMENT
+# ============================
+
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'static']
+    if request.endpoint not in allowed_routes and 'logged_in' not in session:
+        return redirect(url_for('login'))
+
+# ============================
+# ROUTES
 # ============================
 
 @app.route("/")
 def root():
-    if 'logged_in' in session:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return redirect(url_for('dashboard'))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Login page"""
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
@@ -55,14 +61,11 @@ def login():
 
 @app.route("/logout")
 def logout():
-    """Logout route"""
     session.pop("logged_in", None)
     return redirect(url_for("login"))
 
 @app.route("/dashboard")
 def dashboard():
-    if 'logged_in' not in session:
-        return redirect(url_for('login'))
     return render_template("dashboard.html")
 
 # ============================
@@ -123,7 +126,7 @@ def severity_breakdown():
     })
 
 # ============================
-# LOG PROCESSING + THREAD
+# LOG PROCESSING & BACKGROUND
 # ============================
 
 def process_log_entry(log_entry):
