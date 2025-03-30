@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Event Cards Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <!-- Load Chart.js for data visualization -->
@@ -92,24 +92,24 @@
   </div>
 
   <!-- ================== ADD YOUR CHARTS & CHAT SECTION AT THE BOTTOM ================== -->
-  <div id="charts-and-chat" style="display: flex; flex-direction: column; align-items: center; gap: 30px; margin: 40px 0;">
+  <div id="charts-and-chat">
     <!-- Line Chart Section -->
-    <div style="width: 600px; height: 300px; margin-bottom: 30px;">
+    <div>
       <h2>Alerts Over Time (Line Chart)</h2>
       <canvas id="lineChart"></canvas>
     </div>
 
     <!-- Pie Chart Section -->
-    <div style="width: 600px; height: 300px; margin-bottom: 30px;">
+    <div>
       <h2>Severity Breakdown (Pie Chart)</h2>
       <canvas id="pieChart"></canvas>
     </div>
 
     <!-- Chatbot Section -->
-    <div style="width: 400px; height: 300px;">
-      <h2>Chat with AI</h2>
-      <div id="chatbox" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px; margin-bottom: 10px;"></div>
-      <input type="text" id="chatInput" placeholder="Type a message..." style="width: 80%;">
+    <div style="width: 300px;">
+      <h2>User-Friendly ChatBot</h2>
+      <div id="chatbox"></div>
+      <input type="text" id="chatInput" placeholder="Type a message...">
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
