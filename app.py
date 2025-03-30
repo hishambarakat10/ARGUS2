@@ -5,14 +5,13 @@ import torch
 import threading
 import time
 import sqlite3
-import secrets
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
 from flask_socketio import SocketIO
 from collections import Counter
 from sendtodashboard import parse_fast_log
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)  # generates a new key on each restart
+app.secret_key = 'your-secret-key'  # Replace this with a secure random key
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 log_data = []
