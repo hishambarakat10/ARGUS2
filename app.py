@@ -106,9 +106,13 @@ def chat_with_rasa():
         chatbot_reply = "Error reaching chatbot."
     return jsonify({"response": chatbot_reply})
 
+# Change the x-axis to say days of the week and add date on bottom y-axis limit to 100 alerts per day
+
+
+
 @app.route("/api/alerts-over-time")
 def alerts_over_time():
-    minute_timestamps = [entry["timestamp"][:16] for entry in log_data]
+    minute_timestamps = [entry["timestamp"][: 86400] for entry in log_data]
     counts = Counter(minute_timestamps)
     sorted_items = sorted(counts.items())
     if sorted_items:
@@ -163,4 +167,4 @@ log_thread.start()
 # ============================
 
 if __name__ == "__main__":
-    socketio.run(app, host="127.0.0.1", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
