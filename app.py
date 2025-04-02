@@ -78,7 +78,7 @@ def chat_with_langchain_bot():
     host_chatbot_url = "http://192.168.1.217:5005/chat"  # Replace with your actual host IP
 
     try:
-        response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=10)
+        response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=60)
         response_data = response.json()
         return jsonify({"response": response_data.get("response", "No reply received.")})
     except Exception as e:
