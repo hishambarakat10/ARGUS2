@@ -231,9 +231,11 @@
       const input = document.getElementById("chatInput");
       const message = input.value;
       if (message.trim() === "") return;
+    
       const chatbox = document.getElementById("chatbox");
       chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
       input.value = "";
+    
       fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -241,10 +243,13 @@
       })
       .then(response => response.json())
       .then(data => {
-        chatbox.innerHTML += `<div><strong>Rasa:</strong> ${data.response}</div>`;
+        chatbox.innerHTML += `<div><strong>Argus Sentinel:</strong> ${data.response}</div>`;
         chatbox.scrollTop = chatbox.scrollHeight;
+      })
+      .catch(err => {
+        chatbox.innerHTML += `<div><strong>Error:</strong> ${err}</div>`;
       });
-    }
+    }    
 
     const socket = io({ transports: ['websocket'] });
 
