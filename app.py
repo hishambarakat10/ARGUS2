@@ -1,3 +1,4 @@
+# app.py
 import os
 import requests
 import json
@@ -18,7 +19,7 @@ log_data = []
 classification_counts = {}
 
 # ============================
-# DATABASE AUTHENTICATION
+# AUTHENTICATION
 # ============================
 
 def check_user_credentials(username, password):
@@ -28,10 +29,6 @@ def check_user_credentials(username, password):
     user = cursor.fetchone()
     conn.close()
     return user
-
-# ============================
-# GLOBAL LOGIN ENFORCEMENT
-# ============================
 
 @app.before_request
 def require_login():
@@ -69,7 +66,26 @@ def dashboard():
     return render_template("dashboard.html")
 
 # ============================
-# API ROUTES
+# CHAT API (LangChain + Ollama)
+# ============================
+
+@app.route("/api/chat", methods=["POST"])
+def chat_with_langchain_bot():
+    user_input = request.json.get("message")
+    if not user_input:
+        return jsonify({"error": "No message provided"}), 400
+
+    host_chatbot_url = "http://192.168.1.217:5005/chat"  # Replace with your actual host IP
+
+    try:
+        response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=10)
+        response_data = response.json()
+        return jsonify({"response": response_data.get("response", "No reply received.")})
+    except Exception as e:
+        return jsonify({"response": f"Error talking to host chatbot: {e}"}), 500
+
+# ============================
+# CHART + LOG APIs
 # ============================
 
 @app.route("/api/logs", methods=["POST"])
@@ -87,22 +103,7 @@ def get_logs():
 
 @app.route("/api/fast-log", methods=["GET"])
 def get_fast_log():
-    return jsonify(log_data[-100:])  # Return the most recent 100 logs
-
-@app.route("/api/chat", methods=["POST"])
-def chat_with_langchain_bot():
-    user_input = request.json.get("message")
-    if not user_input:
-        return jsonify({"error": "No message provided"}), 400
-
-    host_chatbot_url = "http://192.168.1.217:5005/chat"  # Replace with your host's actual IP
-
-    try:
-        response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=10)
-        response_data = response.json()
-        return jsonify({"response": response_data.get("response", "No reply received.")})
-    except Exception as e:
-        return jsonify({"response": f"Error talking to host chatbot: {e}"}), 500
+    return jsonify(log_data[-100:])
 
 @app.route("/api/alerts-over-time")
 def alerts_over_time():
@@ -124,7 +125,7 @@ def severity_breakdown():
     })
 
 # ============================
-# LOG PROCESSING & BACKGROUND
+# BACKGROUND LOG MONITORING
 # ============================
 
 def process_log_entry(log_entry):
@@ -133,7 +134,7 @@ def process_log_entry(log_entry):
     classification_counts[classification] = classification_counts.get(classification, 0) + 1
     log_data.append(log_entry)
 
-def forward_logs_to_rasa():
+def forward_logs():
     log_file_path = "/var/log/suricata/fast.log"
     if not os.path.exists(log_file_path):
         print(f"File not found: {log_file_path}")
@@ -153,11 +154,11 @@ def forward_logs_to_rasa():
                 except Exception as e:
                     print("Error forwarding log:", e)
 
-log_thread = threading.Thread(target=forward_logs_to_rasa, daemon=True)
+log_thread = threading.Thread(target=forward_logs, daemon=True)
 log_thread.start()
 
 # ============================
-# START APP
+# START FLASK SERVER
 # ============================
 
 if __name__ == "__main__":
