@@ -11,7 +11,7 @@ from collections import Counter
 from sendtodashboard import parse_fast_log
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key'  # Replace this with a secure random key
+app.secret_key = 'your-secret-key'  # Replace with something secure
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 log_data = []
@@ -35,7 +35,7 @@ def check_user_credentials(username, password):
 
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'static', 'handle_logs', 'get_logs', 'chat_with_rasa', 'alerts_over_time', 'severity_breakdown']
+    allowed_routes = ['login', 'static', 'handle_logs', 'get_logs', 'chat_with_langchain_bot', 'alerts_over_time', 'severity_breakdown', 'get_fast_log']
     if request.endpoint not in allowed_routes and 'logged_in' not in session:
         return redirect(url_for('login'))
 
@@ -85,30 +85,24 @@ def handle_logs():
 def get_logs():
     return jsonify(log_data)
 
+@app.route("/api/fast-log", methods=["GET"])
+def get_fast_log():
+    return jsonify(log_data[-100:])  # Return the most recent 100 logs
+
 @app.route("/api/chat", methods=["POST"])
-def chat_with_rasa():
+def chat_with_langchain_bot():
     user_input = request.json.get("message")
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    rasa_server_url = "http://192.168.1.100:5005/webhooks/rest/webhook"
+    host_chatbot_url = "http://192.168.1.217:5005/chat"  # Replace with your host's actual IP
+
     try:
-        rasa_response = requests.post(rasa_server_url,
-                                      json={"sender": "user", "message": user_input},
-                                      timeout=5)
+        response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=10)
+        response_data = response.json()
+        return jsonify({"response": response_data.get("response", "No reply received.")})
     except Exception as e:
-        return jsonify({"response": f"Error connecting to Rasa server: {e}"}), 500
-
-    if rasa_response.status_code == 200:
-        response_data = rasa_response.json()
-        chatbot_reply = response_data[0]["text"] if response_data else "I didn't understand that."
-    else:
-        chatbot_reply = "Error reaching chatbot."
-    return jsonify({"response": chatbot_reply})
-
-# Change the x-axis to say days of the week and add date on bottom y-axis limit to 100 alerts per day
-
-
+        return jsonify({"response": f"Error talking to host chatbot: {e}"}), 500
 
 @app.route("/api/alerts-over-time")
 def alerts_over_time():
@@ -154,10 +148,10 @@ def forward_logs_to_rasa():
             parsed = parse_fast_log(line)
             if parsed:
                 try:
-                    requests.post("http://192.168.1.100:5005/api/receive_log_data", json=parsed, timeout=5)
-                    print("Forwarded log to Rasa:", parsed)
+                    requests.post("http://127.0.0.1:5000/api/logs", json=parsed, timeout=5)
+                    print("Forwarded log:", parsed)
                 except Exception as e:
-                    print("Error forwarding log to Rasa:", e)
+                    print("Error forwarding log:", e)
 
 log_thread = threading.Thread(target=forward_logs_to_rasa, daemon=True)
 log_thread.start()
