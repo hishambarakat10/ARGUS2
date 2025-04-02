@@ -91,7 +91,7 @@
     </div>
   </div>
 
-  <!-- Charts + Chatbot Section -->
+  <!-- Charts Section -->
   <div id="charts-and-chat">
     <div style="width: 100%;">
       <h2>Alerts Over Time</h2>
@@ -101,9 +101,15 @@
       <h2>Severity Breakdown</h2>
       <canvas id="pieChart" width="600" height="250"></canvas>
     </div>
-    <div style="width: 300px;">
-      <h2>User-Friendly ChatBot</h2>
-      <div id="chatbox"></div>
+  </div>
+
+  <!-- Floating Chat Button -->
+  <button id="chat-button">💬</button>
+
+  <!-- Chat Popup -->
+  <div id="chat-window">
+    <div id="chatbox"></div>
+    <div id="chat-input-container">
       <input type="text" id="chatInput" placeholder="Type a message...">
       <button onclick="sendMessage()">Send</button>
     </div>
@@ -164,27 +170,17 @@
               maintainAspectRatio: false,
               scales: {
                 x: {
-                  title: {
-                    display: true,
-                    text: 'Time'
-                  },
-                  ticks: {
-                    autoSkip: true,
-                    maxTicksLimit: 8
-                  }
+                  title: { display: true, text: 'Time' },
+                  ticks: { autoSkip: true, maxTicksLimit: 8 }
                 },
                 y: {
                   beginAtZero: true,
-                  title: {
-                    display: true,
-                    text: 'Alerts'
-                  }
+                  title: { display: true, text: 'Alerts' }
                 }
               }
             }
           });
-        })
-        .catch(err => console.error("Line chart error:", err));
+        });
     }
 
     function updatePieChart() {
@@ -210,14 +206,11 @@
               responsive: true,
               maintainAspectRatio: false,
               plugins: {
-                legend: {
-                  position: 'bottom'
-                }
+                legend: { position: 'bottom' }
               }
             }
           });
-        })
-        .catch(err => console.error("Pie chart error:", err));
+        });
     }
 
     function fetchLogs() {
@@ -229,17 +222,17 @@
 
     function sendMessage() {
       const input = document.getElementById("chatInput");
-      const message = input.value;
-      if (message.trim() === "") return;
-    
+      const message = input.value.trim();
+      if (!message) return;
+
       const chatbox = document.getElementById("chatbox");
       chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
       input.value = "";
-    
+
       fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: message })
+        body: JSON.stringify({ message })
       })
       .then(response => response.json())
       .then(data => {
@@ -249,7 +242,7 @@
       .catch(err => {
         chatbox.innerHTML += `<div><strong>Error:</strong> ${err}</div>`;
       });
-    }    
+    }
 
     const socket = io({ transports: ['websocket'] });
 
@@ -281,6 +274,13 @@
       const isDark = document.body.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
       document.getElementById('theme-toggle').textContent = isDark ? '🌞' : '🌙';
+    });
+
+    // Floating Chat Logic
+    const chatButton = document.getElementById("chat-button");
+    const chatWindow = document.getElementById("chat-window");
+    chatButton.addEventListener("click", () => {
+      chatWindow.classList.toggle("open");
     });
   </script>
 </body>
