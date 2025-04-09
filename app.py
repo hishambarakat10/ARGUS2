@@ -147,9 +147,11 @@ def event_count():
 
 @app.route("/api/cpu", methods=["POST"])
 def receive_cpu_usage():
+    global latest_cpu_usage  # ADD THIS
     data = request.get_json()
     if data and "cpu" in data:
         latest_cpu_usage["cpu"] = data["cpu"]
+        print(" CPU updated:", latest_cpu_usage["cpu"])
         return jsonify({"message": "CPU usage received"}), 200
     return jsonify({"error": "Invalid CPU data"}), 400
 
