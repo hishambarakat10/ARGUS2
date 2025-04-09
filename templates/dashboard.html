@@ -257,7 +257,22 @@
         .catch(err => {
           console.error("Error fetching event count:", err);
         });
-    }    
+    }
+    
+    function updateCPUHealth() {
+      fetch('/api/cpu')
+        .then(res => res.json())
+        .then(data => {
+          const usage = Math.round(data.cpu);
+          const cpuHealthElement = document.querySelector(".circle-text");
+          const progressCircle = document.querySelector(".circle-progress");
+          cpuHealthElement.textContent = `${usage}%`;
+          const maxOffset = 276;
+          const newOffset = maxOffset - (maxOffset * usage) / 100;
+          progressCircle.style.strokeDashoffset = newOffset;
+        })
+        .catch(err => console.error("CPU fetch error:", err));
+    }
 
     const socket = io({ transports: ['websocket'] });
 
@@ -279,11 +294,13 @@
     fetchLogs();
     updateOpenPorts();
     updateEventCount();
+    updateCPUHealth();
 
     // Re-fetch every 5 seconds
     setInterval(fetchLogs, 5000);
     setInterval(updateOpenPorts, 5000);
     setInterval(updateEventCount, 5000);
+    setInterval(updateCPUHealth, 5000);
 
     // Theme toggle
     document.addEventListener('DOMContentLoaded', () => {
