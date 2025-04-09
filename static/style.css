@@ -114,18 +114,23 @@ body {
   position: relative;
 }
 
+.circle-bg,
 .circle-progress {
-  stroke: var(--accent);
-  stroke-dasharray: 276;
-  stroke-dashoffset: 276;  /* Initial full offset (0% fill) */
-  transition: stroke-dashoffset 0.5s ease;
-  transform: rotate(-90deg);
-  transform-origin: center;
+  fill: none;
+  stroke-width: 8;
 }
 
 .circle-bg {
   stroke: #eee;
-  stroke-width: 8;
+}
+
+.circle-progress {
+  stroke: var(--accent);
+  stroke-dasharray: 276;
+  stroke-dashoffset: 276;
+  transition: stroke-dashoffset 0.5s ease;
+  transform: rotate(-90deg);
+  transform-origin: center;
 }
 
 .circle-text {
