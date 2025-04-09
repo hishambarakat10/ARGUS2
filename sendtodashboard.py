@@ -102,7 +102,7 @@ def send_cpu_usage_periodically():
             print(f"Sent CPU usage: {usage}%")
         except Exception as e:
             print("Failed to send CPU usage:", e)
-        time.sleep(5)
+        time.sleep(60)
 
 if __name__ == "__main__":
     print("Starting Suricata log + port scanner monitor...")
