@@ -47,6 +47,7 @@
         </div>
       </div>
 
+      <!-- CPU + Ports Card -->
       <div class="container">
         <div class="card">
           <div class="left-section">
@@ -70,12 +71,9 @@
             <span>HTTP</span><br>
             <span>FTP</span>
           </div>
-          <div class="right-section">
+          <div class="right-section" id="open-ports-box">
             <h3>Open Ports</h3>
-            <span>Port 22</span><br>
-            <span>Port 23</span><br>
-            <span>Port 80</span><br>
-            <span>Port 21</span>
+            <span>Loading...</span>
           </div>
         </div>
       </div>
@@ -150,9 +148,7 @@
         .then(response => response.json())
         .then(data => {
           const ctx = document.getElementById('lineChart').getContext('2d');
-          if (lineChart && typeof lineChart.destroy === 'function') {
-            lineChart.destroy();
-          }
+          if (lineChart) lineChart.destroy();
           lineChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -169,14 +165,8 @@
               responsive: true,
               maintainAspectRatio: false,
               scales: {
-                x: {
-                  title: { display: true, text: 'Time' },
-                  ticks: { autoSkip: true, maxTicksLimit: 8 }
-                },
-                y: {
-                  beginAtZero: true,
-                  title: { display: true, text: 'Alerts' }
-                }
+                x: { title: { display: true, text: 'Time' }, ticks: { autoSkip: true, maxTicksLimit: 8 } },
+                y: { beginAtZero: true, title: { display: true, text: 'Alerts' } }
               }
             }
           });
@@ -188,9 +178,7 @@
         .then(response => response.json())
         .then(data => {
           const ctx = document.getElementById('pieChart').getContext('2d');
-          if (pieChart && typeof pieChart.destroy === 'function') {
-            pieChart.destroy();
-          }
+          if (pieChart) pieChart.destroy();
           pieChart = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -210,6 +198,22 @@
               }
             }
           });
+        });
+    }
+
+    function updateOpenPorts() {
+      fetch('/api/ports')
+        .then(res => res.json())
+        .then(data => {
+          const box = document.getElementById("open-ports-box");
+          if (!Array.isArray(data)) return;
+          box.innerHTML = "<h3>Open Ports</h3>";
+          data.forEach(port => {
+            box.innerHTML += `<span>Port ${port}</span><br>`;
+          });
+        })
+        .catch(err => {
+          console.error("Error fetching open ports:", err);
         });
     }
 
@@ -255,13 +259,20 @@
       updateLineChart();
       updatePieChart();
       fetchLogs();
+      updateOpenPorts();
     });
 
+    // Initial fetches
     updateLineChart();
     updatePieChart();
     fetchLogs();
-    setInterval(fetchLogs, 5000);
+    updateOpenPorts();
 
+    // Re-fetch every 5 seconds
+    setInterval(fetchLogs, 5000);
+    setInterval(updateOpenPorts, 5000);
+
+    // Theme toggle
     document.addEventListener('DOMContentLoaded', () => {
       const theme = localStorage.getItem('theme');
       if (theme === 'dark') {
