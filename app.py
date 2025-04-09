@@ -32,7 +32,9 @@ def check_user_credentials(username, password):
 
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'static', 'handle_logs', 'get_logs', 'chat_with_langchain_bot', 'alerts_over_time', 'severity_breakdown', 'get_fast_log', 'receive_ports']
+    allowed_routes = ['login', 'static', 'handle_logs', 'get_logs', 'chat_with_langchain_bot', 
+                      'alerts_over_time', 'severity_breakdown', 'get_fast_log', 
+                      'receive_ports', 'recieve_cpu_usage', 'get_cpu_usage']
     if request.endpoint not in allowed_routes and 'logged_in' not in session:
         return redirect(url_for('login'))
 
