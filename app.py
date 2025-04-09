@@ -16,6 +16,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 log_data = []
 classification_counts = {}
+latest_cpu_usage = {"cpu": 0.0}
 
 # ============================
 # AUTHENTICATION
@@ -147,20 +148,14 @@ def event_count():
 @app.route("/api/cpu", methods=["POST"])
 def receive_cpu_usage():
     data = request.get_json()
-    if not data or "cpu" not in data:
-        return jsonify({"error": "Invalid CPU data"}), 400
-    with open("cpu_usage.json", "w") as f:
-        json.dump(data, f)
-    return jsonify({"message": "CPU usage received"}), 200
+    if data and "cpu" in data:
+        latest_cpu_usage["cpu"] = data["cpu"]
+        return jsonify({"message": "CPU usage received"}), 200
+    return jsonify({"error": "Invalid CPU data"}), 400
 
 @app.route("/api/cpu", methods=["GET"])
 def get_cpu_usage():
-    try:
-        with open("cpu_usage.json", "r") as f:
-            data = json.load(f)
-        return jsonify(data)
-    except FileNotFoundError:
-        return jsonify({"cpu": 0}), 200
+    return jsonify(latest_cpu_usage)
 
 # ============================
 # BACKGROUND LOG MONITORING
