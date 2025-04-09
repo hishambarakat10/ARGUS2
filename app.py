@@ -144,6 +144,24 @@ def receive_ports():
 def event_count():
     return jsonify({"count": len(log_data)})
 
+@app.route("/api/cpu", methods=["POST"])
+def receive_cpu_usage():
+    data = request.get_json()
+    if not data or "cpu" not in data:
+        return jsonify({"error": "Invalid CPU data"}), 400
+    with open("cpu_usage.json", "w") as f:
+        json.dump(data, f)
+    return jsonify({"message": "CPU usage received"}), 200
+
+@app.route("/api/cpu", methods=["GET"])
+def get_cpu_usage():
+    try:
+        with open("cpu_usage.json", "r") as f:
+            data = json.load(f)
+        return jsonify(data)
+    except FileNotFoundError:
+        return jsonify({"cpu": 0}), 200
+
 # ============================
 # BACKGROUND LOG MONITORING
 # ============================
