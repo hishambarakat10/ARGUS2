@@ -139,6 +139,10 @@ def receive_ports():
             return jsonify(data)
         except FileNotFoundError:
             return jsonify({"error": "No port data available"}), 404
+        
+@app.route("/api/event-count", methods=["GET"])
+def event_count():
+    return jsonify({"count": len(log_data)})
 
 # ============================
 # BACKGROUND LOG MONITORING
