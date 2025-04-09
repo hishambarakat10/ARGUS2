@@ -110,4 +110,4 @@ if __name__ == "__main__":
     threading.Thread(target=send_open_ports_periodically, daemon=True).start()
     threading.Thread(target=send_cpu_usage_periodically, daemon=True).start()
     while True:
-        time.sleep(10)
+        time.sleep(120)
