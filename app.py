@@ -1,4 +1,3 @@
-# app.py
 import os
 import requests
 import json
@@ -32,7 +31,7 @@ def check_user_credentials(username, password):
 
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'static', 'handle_logs', 'get_logs', 'chat_with_langchain_bot', 'alerts_over_time', 'severity_breakdown', 'get_fast_log']
+    allowed_routes = ['login', 'static', 'handle_logs', 'get_logs', 'chat_with_langchain_bot', 'alerts_over_time', 'severity_breakdown', 'get_fast_log', 'receive_ports']
     if request.endpoint not in allowed_routes and 'logged_in' not in session:
         return redirect(url_for('login'))
 
@@ -124,6 +123,23 @@ def severity_breakdown():
         "percentages": list(classification_counts.values())
     })
 
+@app.route('/api/ports', methods=['GET', 'POST'])
+def receive_ports():
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data or not isinstance(data, list):
+            return jsonify({"error": "Invalid port data format"}), 400
+        with open("open_ports.json", "w") as f:
+            json.dump(data, f, indent=4)
+        return jsonify({"message": "Port data received", "ports": data}), 200
+    elif request.method == 'GET':
+        try:
+            with open("open_ports.json", "r") as f:
+                data = json.load(f)
+            return jsonify(data)
+        except FileNotFoundError:
+            return jsonify({"error": "No port data available"}), 404
+
 # ============================
 # BACKGROUND LOG MONITORING
 # ============================
@@ -133,33 +149,6 @@ def process_log_entry(log_entry):
     classification = log_entry["classification"]
     classification_counts[classification] = classification_counts.get(classification, 0) + 1
     log_data.append(log_entry)
-
-def forward_logs():
-    log_file_path = "/var/log/suricata/fast.log"
-    if not os.path.exists(log_file_path):
-        print(f"File not found: {log_file_path}")
-        return
-    with open(log_file_path, "r") as file:
-        file.seek(0, os.SEEK_END)
-        while True:
-            line = file.readline()
-            if not line:
-                time.sleep(0.1)
-                continue
-            parsed = parse_fast_log(line)
-            if parsed:
-                try:
-                    requests.post("http://127.0.0.1:5000/api/logs", json=parsed, timeout=5)
-                    print("Forwarded log:", parsed)
-                except Exception as e:
-                    print("Error forwarding log:", e)
-
-log_thread = threading.Thread(target=forward_logs, daemon=True)
-log_thread.start()
-
-# ============================
-# START FLASK SERVER
-# ============================
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
