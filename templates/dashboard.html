@@ -28,8 +28,8 @@
       <div class="dashboard">
         <div class="card1">
           <div class="card-title">ALL<br>EVENTS</div>
-          <div class="card-number">7842</div>
-        </div>
+          <div class="card-number" id="event-count">Loading...</div>
+        </div>        
         <div class="card2">
           <div class="card-title">WINDOW<br>EVENTS</div>
           <div class="card-number">0</div>
@@ -248,6 +248,17 @@
       });
     }
 
+    function updateEventCount() {
+      fetch('/api/event-count')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("event-count").textContent = data.count;
+        })
+        .catch(err => {
+          console.error("Error fetching event count:", err);
+        });
+    }    
+
     const socket = io({ transports: ['websocket'] });
 
     socket.on("connect", () => {
@@ -267,10 +278,12 @@
     updatePieChart();
     fetchLogs();
     updateOpenPorts();
+    updateEventCount();
 
     // Re-fetch every 5 seconds
     setInterval(fetchLogs, 5000);
     setInterval(updateOpenPorts, 5000);
+    setInterval(updateEventCount, 5000);
 
     // Theme toggle
     document.addEventListener('DOMContentLoaded', () => {
