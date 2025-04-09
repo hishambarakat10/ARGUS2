@@ -3,30 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Argus</title>
+    <title>Login Page</title>
+    <!-- Use Flask's url_for to load the CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles2.css') }}">
 </head>
 <body>
-    <div id="sliding-text">Argus IDS</div>
+    <div class="container">
+        <!-- Left (Login) Section -->
+        <div class="login-section">
+            <div class="branding">ARGUS</div>
+            <h2>Welcome back</h2>
+            <p class="subtext">Please enter your details</p>
 
-    <div class="login-container">
-        <h1>Welcome to Argus</h1>
+            <!-- Flask-compatible form -->
+            <form method="POST" action="/login">
+                <input type="username" name="username" placeholder="Username" required />
+                <input type="password" name="password" placeholder="Password" required />
+                <button type="submit">Sign in</button>
+            </form>
 
-        <form method="POST" action="/login">
-            <input type="text" name="username" placeholder="Enter Username" required>
-            <input type="password" name="password" placeholder="Enter Password" required>
-            <button type="submit">Login</button>
-        </form>
+            <!-- Display flash messages if any -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="flash {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+        </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flash-messages">
-                {% for category, message in messages %}
-                    <li class="flash {{ category }}">{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+        <!-- Right (Illustration) Section -->
+        <div class="illustration-section">
+            <img src="{{ url_for('static', filename='icon.png') }}" alt="Illustration" />
+        </div>
     </div>
 </body>
 </html>
