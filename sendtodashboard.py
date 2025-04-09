@@ -4,6 +4,7 @@ import time
 import re
 import socket
 import threading
+import psutil
 
 LOG_FILE = "/var/log/suricata/fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
@@ -92,10 +93,21 @@ def send_open_ports_periodically():
         except Exception as e:
             print("Exception sending ports:", e)
         time.sleep(60)
+        
+def send_cpu_usage_periodically():
+    while True:
+        usage = psutil.cpu_percent(interval=1)
+        try:
+            requests.post("http://127.0.0.1:5000/api/cpu", json={"cpu": usage})
+            print(f"Sent CPU usage: {usage}%")
+        except Exception as e:
+            print("Failed to send CPU usage:", e)
+        time.sleep(5)
 
 if __name__ == "__main__":
     print("Starting Suricata log + port scanner monitor...")
     threading.Thread(target=follow_log, args=(LOG_FILE,), daemon=True).start()
     threading.Thread(target=send_open_ports_periodically, daemon=True).start()
+    threading.Thread(target=send_cpu_usage_periodically, daemon=True).start()
     while True:
         time.sleep(10)
