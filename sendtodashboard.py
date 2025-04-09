@@ -2,31 +2,26 @@ import os
 import requests
 import time
 import re
+import socket
+import threading
 
 LOG_FILE = "/var/log/suricata/fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
+PORTS_API_URL = "http://127.0.0.1:5000/api/ports"
+TARGET_IP = "127.0.0.1"
+PORTS_TO_SCAN = [21, 22, 23, 80, 443, 3389, 8080]
 
 def parse_fast_log(line):
-    """
-    Parses a Suricata fast.log line and extracts relevant fields.
-    
-    Example logs:
-      With quotes:
-      03/19/2025-13:54:22.351676  [**] [1:1003:2] SQL Injection Attempt Detected [**] [Classification: "SQL Injection Occured"] [Priority: 3] {TCP} 142.251.186.94:80 -> 192.168.2.4:56148
-      
-      Without quotes:
-      03/19/2025-13:54:08.151001  [**] [1:2231000:1] SURICATA QUIC failed decrypt [**] [Classification: Generic Protocol Command Decode] [Priority: 3] {UDP} 192.168.2.4:49019 -> 142.250.114.94:443
-    """
     pattern = (
-        r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)"       # Timestamp
-        r"\s+\[\*\*\]\s+"                                      # Literal [**]
-        r"\[.*?\]\s+"                                          # Ignored bracketed data (e.g., [1:2231000:1])
-        r"(.*?)\s+"                                           # Alert details (non-greedy)
-        r"\[\*\*\]\s+"                                        # Literal [**]
-        r"\[Classification:\s+\"?(.*?)\"?\]\s+"                # Classification, optionally in quotes
-        r"\[Priority:\s+(\d+)\]\s+"                             # Priority (number)
-        r"\{.*?\}\s+"                                         # Protocol info (ignored)
-        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"                  # Source and destination IPs
+        r"^(\d{2}/\d{2}/\d{4}-\d{2}:\d{2}:\d{2}\.\d+)"
+        r"\s+\[\*\*\]\s+"
+        r"\[.*?\]\s+"
+        r"(.*?)\s+"
+        r"\[\*\*\]\s+"
+        r"\[Classification:\s+\"?(.*?)\"?\]\s+"
+        r"\[Priority:\s+(\d+)\]\s+"
+        r"\{.*?\}\s+"
+        r"([\d\.]+):\d+\s+->\s+([\d\.]+):\d+"
     )
     match = re.match(pattern, line)
     if match:
@@ -49,20 +44,15 @@ def parse_fast_log(line):
     return None
 
 def follow_log(file_path):
-    """
-    Continuously monitors the fast.log file for new log entries.
-    When a new line is added, it is parsed and, if valid,
-    immediately sent to the API endpoint.
-    """
     with open(file_path, "r") as file:
-        file.seek(0, os.SEEK_END)  # Start at the end of the file
+        file.seek(0, os.SEEK_END)
         while True:
             line = file.readline()
             if not line:
-                time.sleep(0.1)  # Wait briefly if no new line
+                time.sleep(0.1)
                 continue
 
-            print("Line read:", line.strip())  # Debug: show raw line
+            print("Line read:", line.strip())
             log_entry = parse_fast_log(line)
             if log_entry:
                 print("Parsed log:", log_entry)
@@ -77,6 +67,35 @@ def follow_log(file_path):
             else:
                 print("Log not parsed; skipping.")
 
+def scan_open_ports(ip, ports):
+    open_ports = []
+    for port in ports:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.5)
+            try:
+                s.connect((ip, port))
+                open_ports.append(str(port))
+            except:
+                continue
+    return open_ports
+
+def send_open_ports_periodically():
+    while True:
+        open_ports = scan_open_ports(TARGET_IP, PORTS_TO_SCAN)
+        print("Open ports:", open_ports)
+        try:
+            response = requests.post(PORTS_API_URL, json=open_ports)
+            if response.status_code == 200:
+                print("Open ports sent successfully.")
+            else:
+                print("Port data send error:", response.status_code, response.text)
+        except Exception as e:
+            print("Exception sending ports:", e)
+        time.sleep(60)
+
 if __name__ == "__main__":
-    print("Monitoring fast.log for new logs and sending them immediately...")
-    follow_log(LOG_FILE)
+    print("Starting Suricata log + port scanner monitor...")
+    threading.Thread(target=follow_log, args=(LOG_FILE,), daemon=True).start()
+    threading.Thread(target=send_open_ports_periodically, daemon=True).start()
+    while True:
+        time.sleep(10)
