@@ -10,7 +10,7 @@ LOG_FILE = "/var/log/suricata/fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 PORTS_API_URL = "http://127.0.0.1:5000/api/ports"
 TARGET_IP = "127.0.0.1"
-PORTS_TO_SCAN = [21, 22, 23, 80, 443, 3389, 8080]
+PORTS_TO_SCAN = range (1, 65536)
 
 def parse_fast_log(line):
     pattern = (
