@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>All Alerts</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='allalerts.css') }}">
+</head>
+<body>
+  <div class="topnav">
+    <a href="#" class="no-link">Argus</a>
+    <div class="topnav-right">
+      <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a class="nav-link" href="{{ url_for('alerts') }}">Alerts</a>
+      <a class="nav-link logout-link" href="{{ url_for('logout') }}">Logout</a>
+      <button id="theme-toggle" class="theme-btn">🌙</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="table-header">
+      <h2>All Alerts</h2>
+      <input type="text" placeholder="Search logs..." class="search-input" id="searchInput">
+    </div>
+
+    <table id="logsTable">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Details</th>
+          <th>Classification</th>
+          <th>Source IP</th>
+          <th>Destination IP</th>
+          <th>Device Name</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    fetch('/api/logs')
+      .then(res => res.json())
+      .then(data => {
+        const tableBody = document.querySelector('#logsTable tbody');
+        tableBody.innerHTML = '';
+        data.forEach(log => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${log.timestamp}</td>
+            <td>${log.details}</td>
+            <td>${log.classification}</td>
+            <td>${log.src_ip}</td>
+            <td>${log.dest_ip}</td>
+            <td>${log.device_name}</td>`;
+          tableBody.appendChild(row);
+        });
+
+        document.getElementById("searchInput").addEventListener("keyup", function () {
+          const query = this.value.toLowerCase();
+          const rows = document.querySelectorAll("#logsTable tbody tr");
+          rows.forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(query) ? "" : "none";
+          });
+        });
+      });
+  </script>
+</body>
+</html>
