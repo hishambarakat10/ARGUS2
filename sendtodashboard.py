@@ -9,7 +9,6 @@ import psutil
 LOG_FILE = "/var/log/suricata/fast.log"
 LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 PORTS_API_URL = "http://127.0.0.1:5000/api/ports"
-CHATBOT_API_URL = "http://192.168.1.216:5005/chat" # Replace with your actual host IP
 TARGET_IP = "127.0.0.1"
 PORTS_TO_SCAN = range (1, 65536)
 
@@ -89,13 +88,6 @@ def send_open_ports_periodically():
             response = requests.post(PORTS_API_URL, json=open_ports)
             if response.status_code == 200:
                 print("Open ports sent successfully.")
-
-                # Also notify chatbot
-                port_summary = ", ".join(open_ports) if open_ports else "No ports open"
-                chatbot_msg = {
-                    "message": f"Network update: Detected open ports - {port_summary}."
-                }
-                requests.post(CHATBOT_API_URL, json=chatbot_msg)
             else:
                 print("Port data send error:", response.status_code, response.text)
         except Exception as e:
@@ -108,13 +100,6 @@ def send_cpu_usage_periodically():
         try:
             requests.post("http://127.0.0.1:5000/api/cpu", json={"cpu": usage})
             print(f"Sent CPU usage: {usage}%")
-
-            # Also send a quick warm-up message to chatbot
-            chatbot_msg = {
-                "message": f"System status update: CPU usage is {usage}%."
-            }
-            requests.post(CHATBOT_API_URL, json=chatbot_msg)
-
         except Exception as e:
             print("Failed to send CPU usage:", e)
         time.sleep(60)
