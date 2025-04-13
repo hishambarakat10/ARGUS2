@@ -106,10 +106,12 @@
   <!-- Chat Popup -->
   <div id="chat-hint">💬 Need help?</div>
   <div id="chat-window">
+    <div id="chat-header">ARGUS</div>
+    <div id="chat-subtitle">Please type your question below.</div>
     <div id="chatbox"></div>
     <div id="chat-input-container">
       <input type="text" id="chatInput" placeholder="Type a message...">
-      <button onclick="sendMessage()">Send</button>
+      <button id="sendBtn" onclick="sendMessage()">Send</button>
     </div>
   </div>
 
@@ -332,7 +334,19 @@
       setTimeout(() => {
         hint.classList.remove("show");
       }, 7000); // hide after 7 seconds if not clicked
-    });      
+    });
+  </script>
+
+  <script>
+    // Send message on Enter key press
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("chatInput").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();  // Prevent newline if textarea
+          sendMessage();
+        }
+      });
+    });
   </script>
 </body>
 </html>
