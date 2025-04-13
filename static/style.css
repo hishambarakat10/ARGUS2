@@ -231,16 +231,18 @@ body {
 
 #chatbox {
   flex-grow: 1;
+  padding: 12px;
   overflow-y: auto;
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
+  background: #fafafa;
 }
 
 #chatInput {
-  width: 75%;
-  padding: 5px;
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  outline: none;
+  font-size: 14px;
 }
 
 button {
@@ -279,15 +281,31 @@ button:hover {
   position: fixed;
   bottom: 100px;
   right: 24px;
-  width: 300px;
-  max-height: 400px;
-  background-color: #ffffff;
-  color: #333;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-  padding: 12px;
+  width: 320px;
+  max-height: 500px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   z-index: 999;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+  overflow: hidden;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+#chat-header {
+  background: linear-gradient(to right, #9b2cff, #ff2cb4);
+  color: white;
+  font-weight: bold;
+  padding: 16px;
+  text-align: center;
+  font-size: 16px;
+}
+
+#chat-subtitle {
+  font-size: 14px;
+  padding: 10px 16px;
+  color: #444;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #eee;
 }
 
 #chat-hint {
@@ -316,14 +334,34 @@ button:hover {
 
 #chat-input-container {
   display: flex;
-  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid #eee;
+  background-color: #fff;
 }
 
 #chatbox div {
-  padding: 8px 12px;
-  margin: 4px 0;
-  border-radius: 16px;
-  max-width: 80%;
+  margin-bottom: 10px;
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+#sendBtn {
+  background: linear-gradient(to right, #9b2cff, #ff2cb4);
+  border: none;
+  padding: 10px 16px;
+  color: white;
+  margin-left: 10px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+#sendBtn:hover {
+  opacity: 0.9;
 }
 
 #chatbox .user {
@@ -334,8 +372,8 @@ button:hover {
 }
 
 #chatbox .bot {
-  background-color: #e9e9e9;
-  color: black;
+  background-color: #e6e6e6;
+  color: #333;
   align-self: flex-start;
   margin-right: auto;
 }
