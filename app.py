@@ -163,7 +163,7 @@ def get_cpu_usage():
 
 @app.route('/alerts')
 def alerts():
-    return render_template('alerts.html')
+    return render_template('allalerts.html')
 
 # ============================
 # BACKGROUND LOG MONITORING
