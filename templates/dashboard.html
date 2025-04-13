@@ -13,8 +13,8 @@
   <div class="topnav">
     <a href="#" class="no-link">Argus</a>
     <div class="topnav-right">
-      <a class="nav-link" href="#Dashboard">Dashboard</a>
-      <a class="nav-link" href="#Alerts">Alerts</a>
+      <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a class="nav-link" href="{{ url_for('alerts') }}">Alerts</a>
       <a class="nav-link logout-link" href="{{ url_for('logout') }}">Logout</a>
       <button id="theme-toggle" class="theme-btn">🌙</button>
     </div>
@@ -88,27 +88,6 @@
     </div>
   </div>
 
-  <!-- Alerts Table Section -->
-  <div class="container" id="Alerts">
-    <div class="table-header">
-      <h2>All Alerts</h2>
-      <input type="text" placeholder="Search logs..." class="search-input" id="searchInput">
-    </div>
-    <table id="logsTable">
-      <thead>
-        <tr>
-          <th>Timestamp</th>
-          <th>Details</th>
-          <th>Classification</th>
-          <th>Source IP</th>
-          <th>Destination IP</th>
-          <th>Device Name</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
   <!-- Charts Section -->
   <div id="charts-and-chat">
     <div style="width: 100%;">
@@ -133,35 +112,43 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- JavaScript -->
   <script>
+    let lineChart, pieChart;
+
     function getSeverityColor(classification) {
-      return classification.toLowerCase().includes("generic protocol command decode") ? "green" : "red";
+      const lower = classification.toLowerCase();
+      return lower.includes("generic protocol command decode") ? "green" : "red";
     }
 
     function updateAlerts(logs) {
       const alertsContainer = document.getElementById("alerts");
       alertsContainer.innerHTML = "";
+
       logs.forEach(log => {
-        alertsContainer.innerHTML += `
+        const severityColor = getSeverityColor(log.classification);
+        const alertHTML = `
           <div class="alert-box">
             <div class="alert-text">
               <p class="alert-title">${log.classification}</p>
               <p class="alert-time">${log.timestamp}</p>
             </div>
-            <div class="alert-status" style="background-color: ${getSeverityColor(log.classification)};"></div>
-          </div>`;
+            <div class="alert-status" style="background-color: ${severityColor};"></div>
+          </div>
+        `;
+        alertsContainer.innerHTML += alertHTML;
       });
+
       document.getElementById("lastUpdatedTime").textContent = new Date().toLocaleString();
     }
 
     function updateLineChart() {
       fetch('/api/alerts-over-time')
-        .then(res => res.json())
+        .then(response => response.json())
         .then(data => {
           const ctx = document.getElementById('lineChart').getContext('2d');
-          if (window.lineChart) window.lineChart.destroy();
-          window.lineChart = new Chart(ctx, {
+          if (lineChart) lineChart.destroy();
+          lineChart = new Chart(ctx, {
             type: 'line',
             data: {
               labels: data.timestamps,
@@ -172,6 +159,14 @@
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 tension: 0.1
               }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: { title: { display: true, text: 'Time' }, ticks: { autoSkip: true, maxTicksLimit: 8 } },
+                y: { beginAtZero: true, title: { display: true, text: 'Alerts' } }
+              }
             }
           });
         });
@@ -179,11 +174,11 @@
 
     function updatePieChart() {
       fetch('/api/severity-breakdown')
-        .then(res => res.json())
+        .then(response => response.json())
         .then(data => {
           const ctx = document.getElementById('pieChart').getContext('2d');
-          if (window.pieChart) window.pieChart.destroy();
-          window.pieChart = new Chart(ctx, {
+          if (pieChart) pieChart.destroy();
+          pieChart = new Chart(ctx, {
             type: 'pie',
             data: {
               labels: data.labels,
@@ -193,6 +188,13 @@
                 borderColor: '#fff',
                 borderWidth: 1
               }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'bottom' }
+              }
             }
           });
         });
@@ -203,59 +205,46 @@
         .then(res => res.json())
         .then(data => {
           const box = document.getElementById("open-ports-box");
+          if (!Array.isArray(data)) return;
           box.innerHTML = "<h3>Open Ports</h3>";
-          data.forEach(port => box.innerHTML += `<span>Port ${port}</span><br>`);
+          data.forEach(port => {
+            box.innerHTML += `<span>Port ${port}</span><br>`;
+          });
+        })
+        .catch(err => {
+          console.error("Error fetching open ports:", err);
         });
     }
 
     function fetchLogs() {
       fetch('/api/logs')
-        .then(res => res.json())
-        .then(logs => {
-          updateAlerts(logs);
-          const tableBody = document.querySelector('#logsTable tbody');
-          tableBody.innerHTML = "";
-          logs.forEach(log => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${log.timestamp}</td>
-              <td>${log.details}</td>
-              <td>${log.classification}</td>
-              <td>${log.src_ip}</td>
-              <td>${log.dest_ip}</td>
-              <td>${log.device_name}</td>`;
-            tableBody.appendChild(row);
-          });
-        });
+        .then(response => response.json())
+        .then(logs => updateAlerts(logs))
+        .catch(err => console.error("Log fetch error:", err));
     }
 
     function sendMessage() {
       const input = document.getElementById("chatInput");
       const message = input.value.trim();
       if (!message) return;
+
       const chatbox = document.getElementById("chatbox");
       chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
       input.value = "";
+
       fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message })
       })
-      .then(res => res.json())
+      .then(response => response.json())
       .then(data => {
         chatbox.innerHTML += `<div><strong>Argus Sentinel:</strong> ${data.response}</div>`;
         chatbox.scrollTop = chatbox.scrollHeight;
+      })
+      .catch(err => {
+        chatbox.innerHTML += `<div><strong>Error:</strong> ${err}</div>`;
       });
-    }
-
-    function updateCPUHealth() {
-      fetch('/api/cpu')
-        .then(res => res.json())
-        .then(data => {
-          const usage = Math.round(data.cpu);
-          document.querySelector(".circle-text").textContent = `${usage}%`;
-          document.querySelector(".circle-progress").style.strokeDashoffset = 276 - (276 * usage / 100);
-        });
     }
 
     function updateEventCount() {
@@ -263,11 +252,33 @@
         .then(res => res.json())
         .then(data => {
           document.getElementById("event-count").textContent = data.count;
+        })
+        .catch(err => {
+          console.error("Error fetching event count:", err);
         });
     }
 
-    // Socket & Refresh
-    const socket = io();
+    function updateCPUHealth() {
+      fetch('/api/cpu')
+        .then(res => res.json())
+        .then(data => {
+          const usage = Math.round(data.cpu);
+          const cpuHealthElement = document.querySelector(".circle-text");
+          const progressCircle = document.querySelector(".circle-progress");
+          cpuHealthElement.textContent = `${usage}%`;
+          const maxOffset = 276;
+          const newOffset = maxOffset - (maxOffset * usage) / 100;
+          progressCircle.style.strokeDashoffset = newOffset;
+        })
+        .catch(err => console.error("CPU fetch error:", err));
+    }
+
+    const socket = io({ transports: ['websocket'] });
+
+    socket.on("connect", () => {
+      console.log("✅ Socket connected");
+    });
+
     socket.on("update_charts", () => {
       updateLineChart();
       updatePieChart();
@@ -279,15 +290,14 @@
     updatePieChart();
     fetchLogs();
     updateOpenPorts();
-    updateCPUHealth();
     updateEventCount();
+    updateCPUHealth();
 
     setInterval(fetchLogs, 5000);
     setInterval(updateOpenPorts, 5000);
     setInterval(updateEventCount, 5000);
     setInterval(updateCPUHealth, 5000);
 
-    // Theme
     document.addEventListener('DOMContentLoaded', () => {
       const theme = localStorage.getItem('theme');
       if (theme === 'dark') {
@@ -304,14 +314,6 @@
 
     document.getElementById("chat-button").addEventListener("click", () => {
       document.getElementById("chat-window").classList.toggle("open");
-    });
-
-    document.getElementById("searchInput").addEventListener("keyup", function () {
-      const query = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#logsTable tbody tr");
-      rows.forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(query) ? "" : "none";
-      });
     });
   </script>
 </body>
