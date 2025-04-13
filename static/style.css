@@ -206,6 +206,29 @@ body {
   margin-left: 20px;
 }
 
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.table-header h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #1a2a5a;
+  margin: 0;
+}
+
+.search-input {
+  padding: 10px 20px;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  width: 250px;
+  font-size: 1rem;
+  outline: none;
+}
+
 /* Charts and chat */
 #charts-and-chat {
   display: flex;
@@ -302,4 +325,32 @@ button:hover {
 .chat-msg-user,
 .chat-msg-bot {
   margin-bottom: 6px;
+}
+
+#logsTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+#logsTable thead {
+  background-color: #1a2a5a;
+  color: white;
+}
+
+#logsTable th,
+#logsTable td {
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+#logsTable tbody tr:nth-child(even) {
+  background-color: #f5f6fa;
+}
+
+#logsTable tbody tr:hover {
+  background-color: #e6f0ff;
 }
