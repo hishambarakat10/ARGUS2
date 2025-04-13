@@ -104,6 +104,7 @@
   <button id="chat-button">💬</button>
 
   <!-- Chat Popup -->
+  <div id="chat-hint">💬 Need help?</div>
   <div id="chat-window">
     <div id="chatbox"></div>
     <div id="chat-input-container">
@@ -229,7 +230,7 @@
       if (!message) return;
 
       const chatbox = document.getElementById("chatbox");
-      chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+      chatbox.innerHTML += `<div class="user">${message}</div>`;
       input.value = "";
 
       fetch('/api/chat', {
@@ -239,7 +240,7 @@
       })
       .then(response => response.json())
       .then(data => {
-        chatbox.innerHTML += `<div><strong>Argus Sentinel:</strong> ${data.response}</div>`;
+        chatbox.innerHTML += `<div class="bot">${data.response}</div>`;
         chatbox.scrollTop = chatbox.scrollHeight;
       })
       .catch(err => {
@@ -315,6 +316,23 @@
     document.getElementById("chat-button").addEventListener("click", () => {
       document.getElementById("chat-window").classList.toggle("open");
     });
+
+    window.addEventListener("load", () => {
+      const hint = document.getElementById("chat-hint");
+      const chatButton = document.getElementById("chat-button");
+      const chatWindow = document.getElementById("chat-window");
+    
+      hint.classList.add("show");
+    
+      hint.addEventListener("click", () => {
+        chatWindow.classList.add("open");
+        hint.classList.remove("show");
+      });
+    
+      setTimeout(() => {
+        hint.classList.remove("show");
+      }, 7000); // hide after 7 seconds if not clicked
+    });      
   </script>
 </body>
 </html>
