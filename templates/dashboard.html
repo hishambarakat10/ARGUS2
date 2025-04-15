@@ -161,7 +161,14 @@
               maintainAspectRatio: false,
               scales: {
                 x: { title: { display: true, text: 'Time' }, ticks: { autoSkip: true, maxTicksLimit: 8 } },
-                y: { beginAtZero: true, title: { display: true, text: 'Alerts' } }
+                y: {
+                  beginAtZero: true,
+                  title: { display: true, text: 'Alerts' },
+                  ticks: {
+                    stepSize: 1,
+                    precision: 0
+                  }
+                }                
               }
             }
           });
