@@ -10,6 +10,18 @@ from flask_socketio import SocketIO
 from collections import Counter
 from sendtodashboard import parse_fast_log
 
+def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
+    if not os.path.exists(file_path):
+        return
+    with open(file_path, "r") as f:
+        lines = f.readlines()[-count:]
+        for line in lines:
+            entry = parse_fast_log(line)
+            if entry:
+                log_data.append(entry)
+                classification = entry["classification"]
+                classification_counts[classification] = classification_counts.get(classification, 0) + 1
+
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Replace with something secure
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -176,4 +188,5 @@ def process_log_entry(log_entry):
     log_data.append(log_entry)
 
 if __name__ == "__main__":
+    load_initial_logs()
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
