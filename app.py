@@ -28,6 +28,7 @@ app.secret_key = 'your-secret-key'  # Replace with something secure
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 log_data = []
+windows_log_data = []
 classification_counts = {}
 latest_cpu_usage = {"cpu": 0.0}
 
@@ -90,7 +91,7 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http://192.168.1.216:5005/chat"  # Replace with your actual host IP
+    host_chatbot_url = "http://10.152.23.244:5005/chat"  # Replace with your actual host IP
 
     try:
         response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=150)
@@ -180,6 +181,19 @@ def get_cpu_usage():
 @app.route('/alerts')
 def alerts():
     return render_template('allalerts.html')
+
+@app.route("/api/windows_logs", methods=["POST"])
+def receive_windows_logs():
+    global windows_log_data
+    logs = request.get_json()
+    if logs:
+        windows_log_data.extend(logs)
+        return jsonify({"message": f"{len(logs)} Windows logs received."}), 200
+    return jsonify({"error": "No log data provided"}), 400
+
+@app.route("/api/windows_log_count")
+def windows_log_count():
+    return jsonify({"count": len(windows_log_data)})
 
 # ============================
 # BACKGROUND LOG MONITORING
