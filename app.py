@@ -9,6 +9,7 @@ from flask import Flask, jsonify, render_template, request, redirect, url_for, s
 from flask_socketio import SocketIO
 from collections import Counter
 from sendtodashboard import parse_fast_log
+from datetime import datetime
 
 def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
     if not os.path.exists(file_path):
@@ -121,15 +122,24 @@ def get_fast_log():
 
 @app.route("/api/alerts-over-time")
 def alerts_over_time():
-    minute_timestamps = [entry["timestamp"][: 86400] for entry in log_data]
+    minute_timestamps = []
+
+    for entry in log_data:
+        try:
+            ts = datetime.strptime(entry["timestamp"], "%m/%d/%Y-%H:%M:%S.%f")
+            minute_str = ts.strftime("%Y-%m-%d %H:%M")
+            minute_timestamps.append(minute_str)
+        except:
+            continue
+
     counts = Counter(minute_timestamps)
     sorted_items = sorted(counts.items())
     if sorted_items:
         timestamps, alert_counts = zip(*sorted_items)
     else:
         timestamps, alert_counts = [], []
-    alerts_tensor = torch.tensor(alert_counts, dtype=torch.int32)
-    return jsonify({"timestamps": timestamps, "alerts": alerts_tensor.tolist()})
+
+    return jsonify({"timestamps": timestamps, "alerts": list(alert_counts)})
 
 @app.route("/api/severity-breakdown")
 def severity_breakdown():
