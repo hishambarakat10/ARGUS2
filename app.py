@@ -9,26 +9,12 @@ from flask import Flask, jsonify, render_template, request, redirect, url_for, s
 from flask_socketio import SocketIO
 from collections import Counter
 from sendtodashboard import parse_fast_log
-from datetime import datetime
-
-def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
-    if not os.path.exists(file_path):
-        return
-    with open(file_path, "r") as f:
-        lines = f.readlines()[-count:]
-        for line in lines:
-            entry = parse_fast_log(line)
-            if entry:
-                log_data.append(entry)
-                classification = entry["classification"]
-                classification_counts[classification] = classification_counts.get(classification, 0) + 1
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Replace with something secure
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 log_data = []
-windows_log_data = []
 classification_counts = {}
 latest_cpu_usage = {"cpu": 0.0}
 
@@ -91,10 +77,10 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http://10.152.23.244:5005/chat"  # Replace with your actual host IP
+    host_chatbot_url = "http:///chat"  # Replace with your actual host IP
 
     try:
-        response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=150)
+        response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=120)
         response_data = response.json()
         return jsonify({"response": response_data.get("response", "No reply received.")})
     except Exception as e:
@@ -123,10 +109,7 @@ def get_fast_log():
 
 @app.route("/api/alerts-over-time")
 def alerts_over_time():
-    minute_timestamps = [
-    datetime.strptime(entry["timestamp"], "%m/%d/%Y-%H:%M:%S.%f").strftime("%H:%M")
-    for entry in log_data
-]
+    minute_timestamps = [entry["timestamp"][: 86400] for entry in log_data]
     counts = Counter(minute_timestamps)
     sorted_items = sorted(counts.items())
     if sorted_items:
@@ -178,23 +161,6 @@ def receive_cpu_usage():
 def get_cpu_usage():
     return jsonify(latest_cpu_usage)
 
-@app.route('/alerts')
-def alerts():
-    return render_template('allalerts.html')
-
-@app.route("/api/windows_logs", methods=["POST"])
-def receive_windows_logs():
-    global windows_log_data
-    logs = request.get_json()
-    if logs:
-        windows_log_data.extend(logs)
-        return jsonify({"message": f"{len(logs)} Windows logs received."}), 200
-    return jsonify({"error": "No log data provided"}), 400
-
-@app.route("/api/windows_log_count")
-def windows_log_count():
-    return jsonify({"count": len(windows_log_data)})
-
 # ============================
 # BACKGROUND LOG MONITORING
 # ============================
@@ -206,5 +172,4 @@ def process_log_entry(log_entry):
     log_data.append(log_entry)
 
 if __name__ == "__main__":
-    load_initial_logs()
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
