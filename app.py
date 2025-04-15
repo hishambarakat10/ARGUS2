@@ -77,7 +77,7 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http:///chat"  # Replace with your actual host IP
+    host_chatbot_url = "http://192.168.1.216:5005/chat"  # Replace with your actual host IP
 
     try:
         response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=120)
@@ -160,6 +160,10 @@ def receive_cpu_usage():
 @app.route("/api/cpu", methods=["GET"])
 def get_cpu_usage():
     return jsonify(latest_cpu_usage)
+
+@app.route('/alerts')
+def alerts():
+    return render_template('allalerts.html')
 
 # ============================
 # BACKGROUND LOG MONITORING
