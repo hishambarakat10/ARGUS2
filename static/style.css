@@ -386,3 +386,8 @@ button:hover {
 body.dark .dashboard .card-title {
   color: white;
 }
+
+body.dark .all-window a,
+body.dark .all-devices a {
+  color: white;
+}
