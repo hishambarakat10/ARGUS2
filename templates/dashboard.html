@@ -34,11 +34,6 @@
           <div class="card-number">0</div>
           <div class="all-window"><a href="allwindows.html">view all</a></div>
         </div>
-        <div class="card3">
-          <div class="card-title">SYSLOG<br>EVENTS</div>
-          <div class="card-number">53</div>
-          <div class="all-syslog"><a href="allsyslogs.html">view all</a></div>
-        </div>
         <div class="card4">
           <div class="card-title">ALL<br>DEVICES</div>
           <div class="card-number">4</div>
@@ -127,7 +122,6 @@
     function updateAlerts(logs) {
       const alertsContainer = document.getElementById("alerts");
       alertsContainer.innerHTML = "";
-
       logs.forEach(log => {
         const severityColor = getSeverityColor(log.classification);
         const alertHTML = `
@@ -141,7 +135,6 @@
         `;
         alertsContainer.innerHTML += alertHTML;
       });
-
       document.getElementById("lastUpdatedTime").textContent = new Date().toLocaleString();
     }
 
@@ -230,11 +223,9 @@
       const input = document.getElementById("chatInput");
       const message = input.value.trim();
       if (!message) return;
-
       const chatbox = document.getElementById("chatbox");
       chatbox.innerHTML += `<div class="user">${message}</div>`;
       input.value = "";
-
       fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -277,11 +268,7 @@
     }
 
     const socket = io({ transports: ['websocket'] });
-
-    socket.on("connect", () => {
-      console.log("✅ Socket connected");
-    });
-
+    socket.on("connect", () => console.log("✅ Socket connected"));
     socket.on("update_charts", () => {
       updateLineChart();
       updatePieChart();
@@ -323,26 +310,20 @@
       const hint = document.getElementById("chat-hint");
       const chatButton = document.getElementById("chat-button");
       const chatWindow = document.getElementById("chat-window");
-    
       hint.classList.add("show");
-    
       hint.addEventListener("click", () => {
         chatWindow.classList.add("open");
         hint.classList.remove("show");
       });
-    
       setTimeout(() => {
         hint.classList.remove("show");
-      }, 7000); // hide after 7 seconds if not clicked
+      }, 7000);
     });
-  </script>
 
-  <script>
-    // Send message on Enter key press
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("chatInput").addEventListener("keypress", function (e) {
         if (e.key === "Enter") {
-          e.preventDefault();  // Prevent newline if textarea
+          e.preventDefault();
           sendMessage();
         }
       });
