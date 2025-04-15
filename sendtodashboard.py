@@ -11,6 +11,7 @@ LOGS_API_URL = "http://127.0.0.1:5000/api/logs"
 PORTS_API_URL = "http://127.0.0.1:5000/api/ports"
 TARGET_IP = "127.0.0.1"
 PORTS_TO_SCAN = range (1, 65536)
+CHATBOT_LOG_URL = "http://10.152.23.244:5005/update-fastlog"  # Replace <WINDOWS-IP>
 
 def parse_fast_log(line):
     pattern = (
@@ -68,6 +69,12 @@ def follow_log(file_path):
             else:
                 print("Log not parsed; skipping.")
 
+                try:
+                # Send to chatbot Flask API
+                    requests.post(CHATBOT_LOG_URL, json={"lines": [line.strip()]})
+                except Exception as e:
+                    print("Exception sending to chatbot:", e)
+
 def scan_open_ports(ip, ports):
     open_ports = []
     for port in ports:
@@ -94,6 +101,11 @@ def send_open_ports_periodically():
             print("Exception sending ports:", e)
         time.sleep(60)
         
+        try:
+            requests.post("http://10.152.23.244:5005/update-ports", json=open_ports)
+        except Exception as e:
+            print("Failed to send ports to chatbot:", e)
+        
 def send_cpu_usage_periodically():
     while True:
         usage = psutil.cpu_percent(interval=1)
@@ -103,6 +115,13 @@ def send_cpu_usage_periodically():
         except Exception as e:
             print("Failed to send CPU usage:", e)
         time.sleep(60)
+
+        # Send to chatbot
+        try:
+            requests.post("http://10.152.23.244:5005/update-cpu", json={"cpu": usage})
+        except Exception as e:
+            print("Failed to send CPU to chatbot:", e)
+
 
 if __name__ == "__main__":
     print("Starting Suricata log + port scanner monitor...")
