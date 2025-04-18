@@ -402,3 +402,25 @@ body.dark .all-devices a {
   flex-direction: column;
   justify-content: space-between;
 }
+
+.right-section#open-ports-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+#open-ports-box span {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+body.dark #open-ports-box span {
+  background: #2a2a2a;
+  color: #e0e0e0;
+}
