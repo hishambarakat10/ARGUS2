@@ -391,3 +391,28 @@ body.dark .all-window a,
 body.dark .all-devices a {
   color: white;
 }
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1.5fr;
+  gap: 24px;
+  padding: 30px 40px;
+  align-items: start;
+}
+
+.left-column,
+.center-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.small-card {
+  padding: 15px;
+}
+
+.right-column .card.full-height {
+  flex-grow: 1;
+  overflow-y: auto;
+}
