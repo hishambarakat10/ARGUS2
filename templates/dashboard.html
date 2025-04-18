@@ -31,7 +31,7 @@
         </div>        
         <div class="card2">
           <div class="card-title">WINDOW<br>EVENTS</div>
-          <div class="card-number">0</div>
+          <div class="card-number">{{total_events}}</div>
           <div class="all-window"><a href="allwindows.html">view all</a></div>
         </div>
         <div class="card4">
@@ -336,5 +336,17 @@
       });
     });
   </script>
+
+  <script>
+    function updateWindowsLogCount() {
+      fetch('/api/windows_log_count')
+        .then(res => res.json())
+        .then(data => {
+          document.querySelector('.card2 .card-number').textContent = data.count;
+        });
+    }
+    setInterval(updateWindowsLogCount, 5000);  // every 5 seconds
+    updateWindowsLogCount();  // initial load
+    </script>
 </body>
 </html>
