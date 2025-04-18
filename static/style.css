@@ -416,3 +416,20 @@ body.dark .all-devices a {
   flex-grow: 1;
   overflow-y: auto;
 }
+
+.top-cards {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 40px 0;
+}
+
+.top-cards .card {
+  flex: 1;
+  min-width: 180px;
+  text-align: center;
+}
+
+.right-column .wide-card {
+  height: 100%;
+}
