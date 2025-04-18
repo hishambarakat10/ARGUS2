@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Event Cards Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
@@ -66,11 +69,6 @@
           <span>Loading...</span>
         </div>
       </div>
-
-      <div class="card">
-        <h2>Severity Breakdown</h2>
-        <canvas id="pieChart" width="300" height="200"></canvas>
-      </div>
     </div>
 
     <!-- CENTER COLUMN -->
@@ -78,6 +76,10 @@
       <div class="card">
         <h2>Alerts Over Time</h2>
         <canvas id="lineChart" width="600" height="250"></canvas>
+      </div>
+      <div class="card">
+        <h2>Severity Breakdown</h2>
+        <canvas id="pieChart" width="300" height="200"></canvas>
       </div>
     </div>
 
