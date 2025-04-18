@@ -20,59 +20,57 @@
     </div>
   </div>
 
-  <!-- Dashboard Grid Layout -->
-  <div class="dashboard-grid">
-    <!-- Left Column -->
-    <div class="main-wrapper">
-      <div class="dashboard">
-        <div class="card1">
-          <div class="card-title">ALL<br>EVENTS</div>
-          <div class="card-number" id="event-count">Loading...</div>
-        </div>        
-        <div class="card2">
-          <div class="card-title">WINDOW<br>EVENTS</div>
-          <div class="card-number">{{total_events}}</div>
-          <div class="all-window"><a href="allwindows.html">view all</a></div>
+  <!-- Updated Layout -->
+  <div class="dashboard-layout">
+    <!-- LEFT COLUMN -->
+    <div class="left-column">
+      <div class="card1">
+        <div class="card-title">ALL<br>EVENTS</div>
+        <div class="card-number" id="event-count">Loading...</div>
+      </div>
+
+      <div class="card small-card">
+        <div class="left-section">
+          <h3>WINSPC-01</h3>
+          <span>CPU Health</span>
         </div>
-        <div class="card4">
-          <div class="card-title">ALL<br>DEVICES</div>
-          <div class="card-number">4</div>
-          <div class="all-devices"><a href="alldevices.html">view all</a></div>
+        <div class="circle-wrap">
+          <svg viewBox="0 0 100 100" width="80" height="80">
+            <circle class="circle-bg" cx="50" cy="50" r="44"></circle>
+            <circle class="circle-progress" cx="50" cy="50" r="44" style="stroke-dashoffset:276;"></circle>
+          </svg>
+          <div class="circle-text">92%</div>
         </div>
       </div>
 
-      <!-- CPU + Ports Card -->
-      <div class="container">
-        <div class="card">
-          <div class="left-section">
-            <h3>WINSPC-01</h3>
-            <span>CPU Health</span>
-          </div>
-          <div class="circle-wrap">
-            <svg viewBox="0 0 100 100" width="100" height="100">
-              <circle class="circle-bg" cx="50" cy="50" r="44"></circle>
-              <circle class="circle-progress" cx="50" cy="50" r="44" style="stroke-dashoffset:276;"></circle>
-            </svg>            
-            <div class="circle-text">92%</div>
-          </div>
+      <div class="card small-card">
+        <div class="left-section" id="port-services">
+          <h3>WINSPC-01</h3>
+          <span>Loading services...</span>
         </div>
+        <div class="right-section" id="open-ports-box">
+          <h3>Open Ports</h3>
+          <span>Loading...</span>
+        </div>
+      </div>
 
-        <div class="card">
-          <div class="left-section" id="port-services">
-            <h3>WINSPC-01</h3>
-            <span>Loading services...</span>
-          </div>
-          <div class="right-section" id="open-ports-box">
-            <h3>Open Ports</h3>
-            <span>Loading...</span>
-          </div>
-        </div>
+      <div class="card">
+        <h2>Severity Breakdown</h2>
+        <canvas id="pieChart" width="300" height="200"></canvas>
       </div>
     </div>
 
-    <!-- Right Column: Recent Alerts -->
-    <div class="security-logs">
-      <div class="right-dashboard">
+    <!-- CENTER COLUMN -->
+    <div class="center-column">
+      <div class="card">
+        <h2>Alerts Over Time</h2>
+        <canvas id="lineChart" width="600" height="250"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+      <div class="card full-height">
         <h1 class="dashboard-title">Recent Alerts</h1>
         <p class="last-updated">Last Updated Time: <span id="lastUpdatedTime"></span></p>
         <div id="alerts" class="alerts-container"></div>
@@ -80,22 +78,8 @@
     </div>
   </div>
 
-  <!-- Charts Section -->
-  <div id="charts-and-chat">
-    <div style="width: 100%;">
-      <h2>Alerts Over Time</h2>
-      <canvas id="lineChart" width="600" height="250"></canvas>
-    </div>
-    <div style="width: 100%;">
-      <h2>Severity Breakdown</h2>
-      <canvas id="pieChart" width="600" height="250"></canvas>
-    </div>
-  </div>
-
-  <!-- Floating Chat Button -->
+  <!-- Chat UI -->
   <button id="chat-button">💬</button>
-
-  <!-- Chat Popup -->
   <div id="chat-hint">💬 Need help?</div>
   <div id="chat-window">
     <div id="chat-header">ARGUS</div>
