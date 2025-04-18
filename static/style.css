@@ -388,3 +388,14 @@ body.dark .all-window a,
 body.dark .all-devices a {
   color: white;
 }
+
+#lineChart {
+  max-width: 100%;
+  max-height: 300px;
+  height: 300px;
+}
+
+.card canvas#lineChart {
+  display: block;
+  margin: 0 auto;
+}
