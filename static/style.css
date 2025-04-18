@@ -405,22 +405,27 @@ body.dark .all-devices a {
 
 .right-section#open-ports-box {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 40px;
   width: 100%;
 }
 
-#open-ports-box span {
+#open-ports-box .service-list,
+#open-ports-box .port-list {
   display: flex;
-  justify-content: space-between;
-  padding: 6px 10px;
-  background: #f0f0f0;
-  border-radius: 8px;
+  flex-direction: column;
+  gap: 6px;
   font-size: 14px;
   font-weight: 500;
 }
 
-body.dark #open-ports-box span {
-  background: #2a2a2a;
+#open-ports-box .service-list span,
+#open-ports-box .port-list span {
+  padding: 2px 0;
+}
+
+body.dark #open-ports-box .service-list span,
+body.dark #open-ports-box .port-list span {
   color: #e0e0e0;
 }
