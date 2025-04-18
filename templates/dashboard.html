@@ -20,15 +20,28 @@
     </div>
   </div>
 
+  <!-- Top Row Cards -->
+  <div class="top-cards">
+    <div class="card card1">
+      <div class="card-title">ALL<br>EVENTS</div>
+      <div class="card-number" id="event-count">Loading...</div>
+    </div>
+    <div class="card card4">
+      <div class="card-title">ALL<br>DEVICES</div>
+      <div class="card-number">4</div>
+      <div class="all-devices"><a href="alldevices.html">view all</a></div>
+    </div>
+    <div class="card card2">
+      <div class="card-title">WINDOW<br>EVENTS</div>
+      <div class="card-number">{{total_events}}</div>
+      <div class="all-window"><a href="allwindows.html">view all</a></div>
+    </div>
+  </div>
+
   <!-- Updated Layout -->
   <div class="dashboard-layout">
     <!-- LEFT COLUMN -->
     <div class="left-column">
-      <div class="card1">
-        <div class="card-title">ALL<br>EVENTS</div>
-        <div class="card-number" id="event-count">Loading...</div>
-      </div>
-
       <div class="card small-card">
         <div class="left-section">
           <h3>WINSPC-01</h3>
@@ -38,7 +51,7 @@
           <svg viewBox="0 0 100 100" width="80" height="80">
             <circle class="circle-bg" cx="50" cy="50" r="44"></circle>
             <circle class="circle-progress" cx="50" cy="50" r="44" style="stroke-dashoffset:276;"></circle>
-          </svg>
+          </svg>            
           <div class="circle-text">92%</div>
         </div>
       </div>
@@ -70,7 +83,7 @@
 
     <!-- RIGHT COLUMN -->
     <div class="right-column">
-      <div class="card full-height">
+      <div class="card full-height wide-card">
         <h1 class="dashboard-title">Recent Alerts</h1>
         <p class="last-updated">Last Updated Time: <span id="lastUpdatedTime"></span></p>
         <div id="alerts" class="alerts-container"></div>
