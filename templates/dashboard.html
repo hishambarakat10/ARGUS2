@@ -58,12 +58,9 @@
         </div>
 
         <div class="card">
-          <div class="left-section">
+          <div class="left-section" id="port-services">
             <h3>WINSPC-01</h3>
-            <span>SSH</span><br>
-            <span>Telnet</span><br>
-            <span>HTTP</span><br>
-            <span>FTP</span>
+            <span>Loading services...</span>
           </div>
           <div class="right-section" id="open-ports-box">
             <h3>Open Ports</h3>
@@ -204,20 +201,45 @@
     }
 
     function updateOpenPorts() {
+      const portMap = {
+        21: "FTP",
+        22: "SSH",
+        23: "Telnet",
+        25: "SMTP",
+        53: "DNS",
+        80: "HTTP",
+        110: "POP3",
+        139: "NetBIOS",
+        143: "IMAP",
+        443: "HTTPS",
+        3306: "MySQL",
+        3389: "RDP",
+        8080: "HTTP-ALT"
+        // Add more as needed
+      };
+    
       fetch('/api/ports')
         .then(res => res.json())
         .then(data => {
           const box = document.getElementById("open-ports-box");
+          const servicesBox = document.getElementById("port-services");
+    
           if (!Array.isArray(data)) return;
+    
           box.innerHTML = "<h3>Open Ports</h3>";
+          servicesBox.innerHTML = "<h3>WINSPC-01</h3>";
+    
           data.forEach(port => {
+            const portNum = parseInt(port);
+            const service = portMap[portNum] || "Unknown";
             box.innerHTML += `<span>Port ${port}</span><br>`;
+            servicesBox.innerHTML += `<span>${service} (${port})</span><br>`;
           });
         })
         .catch(err => {
           console.error("Error fetching open ports:", err);
         });
-    }
+    }    
 
     function fetchLogs() {
       fetch('/api/logs')
