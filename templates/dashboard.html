@@ -1,113 +1,107 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Event Cards Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Event Cards Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
 </head>
 <body>
-  <!-- Top Navigation Bar -->
-  <div class="topnav">
-    <a href="#" class="no-link">Argus</a>
-    <div class="topnav-right">
-      <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-      <a class="nav-link" href="{{ url_for('alerts') }}">Alerts</a>
-      <a class="nav-link logout-link" href="{{ url_for('logout') }}">Logout</a>
-      <button id="theme-toggle" class="theme-btn">🌙</button>
-    </div>
-  </div>
+<!-- Top Navigation Bar -->
+<div class="topnav">
+<a class="no-link" href="#">Argus</a>
+<div class="topnav-right">
+<a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+<a class="nav-link" href="{{ url_for('alerts') }}">Alerts</a>
+<a class="nav-link logout-link" href="{{ url_for('logout') }}">Logout</a>
+<button class="theme-btn" id="theme-toggle">🌙</button>
+</div>
+</div>
+<!-- Top Row Cards -->
+<div class="top-cards">
+<div class="card card1">
+<div class="card-title">ALL<br/>EVENTS</div>
+<div class="card-number" id="event-count">Loading...</div>
+</div>
+<div class="card card4">
+<div class="card-title">ALL<br/>DEVICES</div>
+<div class="card-number">4</div>
+<div class="all-devices"><a href="alldevices.html">view all</a></div>
+</div>
+<div class="card card2">
+<div class="card-title">WINDOW<br/>EVENTS</div>
+<div class="card-number">{{total_events}}</div>
+<div class="all-window"><a href="allwindows.html">view all</a></div>
+</div>
+</div>
+<!-- Updated Layout -->
+<div class="dashboard-layout">
+<!-- LEFT COLUMN -->
+<div class="left-column">
+<div class="card small-card">
+<div class="left-section">
+<h3>WINSPC-01</h3>
+<span>CPU Health</span>
+</div>
+<div class="circle-wrap">
+<svg height="80" viewbox="0 0 100 100" width="80">
+<circle class="circle-bg" cx="50" cy="50" r="44"></circle>
+<circle class="circle-progress" cx="50" cy="50" r="44" style="stroke-dashoffset:276;"></circle>
+</svg>
+<div class="circle-text">92%</div>
+</div>
+</div>
 
-  <!-- Top Row Cards -->
-  <div class="top-cards">
-    <div class="card card1">
-      <div class="card-title">ALL<br>EVENTS</div>
-      <div class="card-number" id="event-count">Loading...</div>
-    </div>
-    <div class="card card4">
-      <div class="card-title">ALL<br>DEVICES</div>
-      <div class="card-number">4</div>
-      <div class="all-devices"><a href="alldevices.html">view all</a></div>
-    </div>
-    <div class="card card2">
-      <div class="card-title">WINDOW<br>EVENTS</div>
-      <div class="card-number">{{total_events}}</div>
-      <div class="all-window"><a href="allwindows.html">view all</a></div>
-    </div>
-  </div>
+<div class="card">
+<h2>Severity Breakdown</h2>
+<canvas height="200" id="pieChart" width="300"></canvas>
+</div></div>
+<!-- CENTER COLUMN -->
+<div class="center-column">
+<div class="card">
+<h2>Alerts Over Time</h2>
+<canvas height="250" id="lineChart" width="600"></canvas>
+</div>
 
-  <!-- Updated Layout -->
-  <div class="dashboard-layout">
-    <!-- LEFT COLUMN -->
-    <div class="left-column">
-      <div class="card small-card">
-        <div class="left-section">
-          <h3>WINSPC-01</h3>
-          <span>CPU Health</span>
-        </div>
-        <div class="circle-wrap">
-          <svg viewBox="0 0 100 100" width="80" height="80">
-            <circle class="circle-bg" cx="50" cy="50" r="44"></circle>
-            <circle class="circle-progress" cx="50" cy="50" r="44" style="stroke-dashoffset:276;"></circle>
-          </svg>            
-          <div class="circle-text">92%</div>
-        </div>
-      </div>
-
-      <div class="card small-card">
-        <div class="left-section" id="port-services">
-          <h3>WINSPC-01</h3>
-          <span>Loading services...</span>
-        </div>
-        <div class="right-section" id="open-ports-box">
-          <h3>Open Ports</h3>
-          <span>Loading...</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- CENTER COLUMN -->
-    <div class="center-column">
-      <div class="card">
-        <h2>Alerts Over Time</h2>
-        <canvas id="lineChart" width="600" height="250"></canvas>
-      </div>
-      <div class="card">
-        <h2>Severity Breakdown</h2>
-        <canvas id="pieChart" width="300" height="200"></canvas>
-      </div>
-    </div>
-
-    <!-- RIGHT COLUMN -->
-    <div class="right-column">
-      <div class="card full-height wide-card">
-        <h1 class="dashboard-title">Recent Alerts</h1>
-        <p class="last-updated">Last Updated Time: <span id="lastUpdatedTime"></span></p>
-        <div id="alerts" class="alerts-container"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Chat UI -->
-  <button id="chat-button">💬</button>
-  <div id="chat-hint">💬 Need help?</div>
-  <div id="chat-window">
-    <div id="chat-header">ARGUS</div>
-    <div id="chat-subtitle">Please type your question below.</div>
-    <div id="chatbox"></div>
-    <div id="chat-input-container">
-      <input type="text" id="chatInput" placeholder="Type a message...">
-      <button id="sendBtn" onclick="sendMessage()">Send</button>
-    </div>
-  </div>
-
-  <!-- JavaScript -->
-  <script>
+<div class="card small-card">
+<div class="left-section" id="port-services">
+<h3>WINSPC-01</h3>
+<span>Loading services...</span>
+</div>
+<div class="right-section" id="open-ports-box">
+<h3>Open Ports</h3>
+<span>Loading...</span>
+</div>
+</div></div>
+<!-- RIGHT COLUMN -->
+<div class="right-column">
+<div class="card full-height wide-card">
+<h1 class="dashboard-title">Recent Alerts</h1>
+<p class="last-updated">Last Updated Time: <span id="lastUpdatedTime"></span></p>
+<div class="alerts-container" id="alerts"></div>
+</div>
+</div>
+</div>
+<!-- Chat UI -->
+<button id="chat-button">💬</button>
+<div id="chat-hint">💬 Need help?</div>
+<div id="chat-window">
+<div id="chat-header">ARGUS</div>
+<div id="chat-subtitle">Please type your question below.</div>
+<div id="chatbox"></div>
+<div id="chat-input-container">
+<input id="chatInput" placeholder="Type a message..." type="text"/>
+<button id="sendBtn" onclick="sendMessage()">Send</button>
+</div>
+</div>
+<!-- JavaScript -->
+<script>
     let lineChart, pieChart;
 
     function getSeverityColor(classification) {
@@ -357,8 +351,7 @@
       });
     });
   </script>
-
-  <script>
+<script>
     function updateWindowsLogCount() {
       fetch('/api/windows_log_count')
         .then(res => res.json())
