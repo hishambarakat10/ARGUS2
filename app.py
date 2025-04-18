@@ -78,7 +78,14 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    """Serves the main HTML dashboard."""
+    with open(os.path.join('windows_health.json')) as f:
+        devices = json.load(f)
+    total_devices = len(devices)
+    with open('windows_events.json') as f:
+        data = json.load(f)
+    total_events = len(data)
+    return render_template('dashboard.html', total_devices=total_devices, total_events=total_events)
 
 # ============================
 # CHAT API (LangChain + Ollama)
@@ -90,7 +97,7 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http://10.152.48.108:5005/chat"  # Replace with your actual host IP
+    host_chatbot_url = "http://10.152.23.244:5005/chat"  # Replace with your actual host IP
 
     try:
         response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=150)
@@ -186,6 +193,18 @@ def get_cpu_usage():
 @app.route('/alerts')
 def alerts():
     return render_template('allalerts.html')
+
+@app.route('/allalerts.html')
+def all_alerts():
+    """Serves the main HTML dashboard."""
+    return render_template('allalerts.html')
+
+@app.route('/allwindows.html')
+def all_windows():
+    with open('windows_events.json') as f:
+        data = json.load(f)
+    total_events = len(data)
+    return render_template('allwindows.html', all_windows = data)
 
 # ============================
 # BACKGROUND LOG MONITORING
