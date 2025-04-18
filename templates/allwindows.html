@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='allwindows.css') }}">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+<div class="topnav">
+    <a href="#" style="float: left; padding: 14px 16px; color: white; text-decoration: none;">Argus</a>
+    <div style="float: right;">
+        <a href="{{ url_for('dashboard') }}" style="display: inline-block; padding: 14px 16px; color: white; text-decoration: none;">Dashboard</a>
+       <a href="allalerts.html" style="display: inline-block; padding: 14px 16px; color: white; text-decoration: none;">Alerts</a>
+      <a href="#Settings" style="display: inline-block; padding: 14px 16px; color: white; text-decoration: none;">Settings</a>
+    </div>
+</div>
+<div class="table-wrapper">
+  <div class = "table-header">
+    <h2 class="title">Window Events</h2>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search logs..." oninput="filterTable()" />
+
+       
+    </div>
+  </div>
+  
+
+  <table id="eventsTable">
+      <thead>
+          <tr>
+              <th>Event ID</th>
+              <th>Time</th>
+              <th>Action</th>
+              <th>Device</th>
+              <th>Message</th>
+              <th>Source IP</th>
+              <th>Who did?</th>
+              <th>Priority</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for event in all_windows %}
+          <tr>
+              <td>{{ event.event_id }}</td>
+              <td>{{ event.time_generated }}</td>
+              <td>{{ event.category }}</td>
+              <td>{{ event.computer_name }}</td>
+              <td>{{ event.message }}</td>
+              <td>{{ event.source_ip }}</td>
+              <td>{{ event.account_name }}</td>
+              <td><span class="priority-dot {{ event.priority | lower }}"></span></td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+
+<script>
+  function filterTable() {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const rows = document.querySelectorAll("#eventsTable tbody tr");
+      rows.forEach(row => {
+          const text = row.innerText.toLowerCase();
+          row.style.display = text.includes(input) ? "" : "none";
+      });
+  }
+</script>
+</body>
+</html>

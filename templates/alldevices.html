@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='alldevices.css') }}">
+</head>
+<body>
+<!-- Top Navigation Bar -->
+<div class="topnav">
+    <a href="#" style="float: left; padding: 14px 16px; color: white; text-decoration: none;">Argus</a>
+    <div style="float: right;">
+      <a href="{{ url_for('dashboard') }}" style="display: inline-block; padding: 14px 16px; color: white; text-decoration: none;">Dashboard</a>
+      <a href= "allalerts.html" style="display: inline-block; padding: 14px 16px; color: white; text-decoration: none;">Alerts</a>
+      <a href="#Settings" style="display: inline-block; padding: 14px 16px; color: white; text-decoration: none;">Settings</a>
+    </div>
+</div>
+
+<div class="main-content">
+    <h1>ALL DEVICES</h1>
+    <div class="device-grid">
+      {% for device in devices %}
+        <div class="device-card">
+            <div class="device-name">Name: {{ device.device_name }}</div>
+            <p><strong>IP:</strong> {{ device.ip_address }}</p>
+            <p><strong>OS:</strong> {{ device.os_version }}</p>
+            <p><strong>Uptime:</strong> {{ device.uptime }}</p>
+            <p><strong>CPU:</strong> {{ device.cpu_percent }}%</p>
+            <p><strong>Memory:</strong> {{ device.memory_percent }}%</p>
+            <p><strong>Last Check-in:</strong> {{ device.last_check_in }}</p>
+        </div>
+      {% endfor %}
+    </div>
+</div>
+</div>
+<script>
+    setInterval(() => {
+      window.location.reload();
+    }, 15000); // every 15 seconds
+</script>
+  
+</body>
+</html>
