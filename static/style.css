@@ -7,6 +7,10 @@
   --scroll-thumb: #bbb;
 }
 
+.dashboard-layout {
+  margin-right: 380px;    /* (fixed panel width + its side padding) */
+}
+
 body.dark {
   --bg: #121212;
   --text: #e0e0e0;
@@ -85,7 +89,6 @@ body {
   gap: 24px;
   padding: 30px 40px;
   align-items: start;
-  margin-right: 380px;    /* (fixed panel width + its side padding) */
 }
 
 .left-column,
