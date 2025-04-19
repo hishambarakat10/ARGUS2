@@ -429,3 +429,36 @@ body.dark #open-ports-box .service-list span,
 body.dark #open-ports-box .port-list span {
   color: #e0e0e0;
 }
+
+/* 1) Shrink main grid to just left+center, make room on the right */
+.dashboard-layout {
+  /* drop the third column */
+  grid-template-columns: 1fr 2fr;
+  /* push it away from the fixed alerts panel */
+  margin-right: 360px;    /* = alerts width (300px) + padding (2×30px) */
+}
+
+/* 2) Pin Recent Alerts to the right, full‑height & scrollable */
+.right-column {
+  position: fixed;
+  top: 60px;              /* height of your topnav */
+  right: 0;
+  width: 300px;           /* how wide the alerts panel should be */
+  bottom: 0;
+  padding: 30px;
+  overflow-y: auto;
+  background: var(--bg);
+  box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+/* 3) Make the inside alerts container fill its parent */
+.right-column .full-height {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.right-column .alerts-container {
+  flex-grow: 1;
+}
