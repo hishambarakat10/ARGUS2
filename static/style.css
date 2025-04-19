@@ -510,3 +510,33 @@ body.dark #open-ports-box .port-list span {
   max-height: none;      /* remove any earlier height limits */
   padding-right: 8px;    /* preserve that scrollbar padding */
 }
+
+/* --- at the very bottom of style.css --- */
+
+/* 1) Pin the whole panel to the viewport, ignore any other rules */
+.right-column {
+  position: fixed !important;
+  top: 60px    !important;   /* just below your nav bar */
+  right: 0     !important;   /* flush to the right edge */
+  bottom: 0    !important;   /* down to the bottom of the screen */
+  width: 320px !important;   /* whatever width you want */
+  padding: 30px !important;  /* match your card padding */
+  background: var(--bg) !important;
+  z-index: 1000 !important;
+  overflow: visible !important;  /* let the inner container handle scrolling */
+}
+
+/* 2) Make the inner card stretch to fill that fixed panel */
+.right-column .card.full-height {
+  display: flex    !important;
+  flex-direction: column !important;
+  flex: 1          !important;
+}
+
+/* 3) Only the alerts list scrolls—fills the remaining space */
+.right-column .alerts-container {
+  flex: 1         !important;
+  overflow-y: auto!important;
+  max-height: none!important;  /* remove any old 400px cap */
+  padding-right: 8px;          /* keep your scrollbar padding */
+}
