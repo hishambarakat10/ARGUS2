@@ -156,14 +156,12 @@ body {
   margin-bottom: 10px;
 }
 
+/* Make the list fill the remaining space and scroll */
 .alerts-container {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 8px;
+  flex: 1;                             /* grow to fill card */
+  margin-top: 12px;                    /* small gap after “Last Updated” */
+  overflow-y: auto;                    /* vertical scroll only */
+  /* remove any max-height here */
 }
 
 .alerts-container::-webkit-scrollbar {
@@ -441,4 +439,8 @@ body.dark #open-ports-box .port-list span {
 /* — Pull Recent Alerts up to align with the top cards — */
 .right-column .card.full-height.wide-card {
   margin-top: -180px;  /* tweak this until it sits level with your top row */
+  max-height: calc(100vh - 140px);     /* viewport height minus that offset */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;                    /* hide overflow on the card itself */
 }
