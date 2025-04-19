@@ -433,12 +433,12 @@ body.dark #open-ports-box .port-list span {
 /* ------------------------------------------------------------------
    NEW: Pin “Recent Alerts” card just below the navbar on the right
 ---------------------------------------------------------------------- */
+/* “Stick” Recent Alerts inside its column, just below the navbar */
 .right-column .card.full-height.wide-card {
-  position: fixed;
-  top: 60px;                    /* just under the navbar – tweak if yours is taller/shorter */
-  right: 40px;                  /* matches your dashboard-layout’s 40px side padding */
-  width: 30%;                   /* approx the same width as your 1.5fr right column */
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
-  z-index: 10;
+  position: sticky;
+  top: 60px;            /* adjust if your navbar is taller/shorter */
+}
+/* ensure the right column stays aligned to the top of the grid */
+.right-column {
+  align-self: start;
 }
