@@ -462,3 +462,17 @@ body.dark #open-ports-box .port-list span {
 .right-column .alerts-container {
   flex-grow: 1;
 }
+
+/* make the Recent Alerts card a flex‑column container */
+.right-column .card.full-height {
+  display: flex;
+  flex-direction: column;
+}
+
+/* let the alerts container grow to fill and scroll */
+.right-column .alerts-container {
+  flex: 1;           /* fill remaining vertical space */
+  max-height: none;  /* remove the old 400px cap */
+  overflow-y: auto;  /* keep the scrollbar */
+  padding-right: 8px;/* preserve your scrollbar padding */
+}
