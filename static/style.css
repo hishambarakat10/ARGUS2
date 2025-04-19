@@ -436,7 +436,7 @@ body.dark #open-ports-box .port-list span {
 /* “Stick” Recent Alerts inside its column, just below the navbar */
 .right-column .card.full-height.wide-card {
   position: sticky;
-  top: 2240px;            /* adjust if your navbar is taller/shorter */
+  top: 140px;            /* adjust if your navbar is taller/shorter */
 }
 /* ensure the right column stays aligned to the top of the grid */
 .right-column {
