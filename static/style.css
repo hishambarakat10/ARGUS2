@@ -80,7 +80,11 @@ body {
 
 /* Layout */
 .dashboard-layout {
-  height: calc(100vh - 180px);
+  display: grid;
+  grid-template-columns: 1fr 2fr 1.5fr;
+  gap: 24px;
+  padding: 30px 40px;
+  align-items: start;
 }
 
 .left-column,
@@ -154,9 +158,10 @@ body {
 
 /* Make the list fill the remaining space and scroll */
 .alerts-container {
-  flex: 1;
-  overflow-y: auto;  /* grow to fill card */
-  margin-top: 12px;  /* small gap after “Last Updated” */
+  flex: 1;                             /* grow to fill card */
+  margin-top: 12px;                    /* small gap after “Last Updated” */
+  overflow-y: auto;                    /* vertical scroll only */
+  /* remove any max-height here */
 }
 
 .alerts-container::-webkit-scrollbar {
@@ -428,15 +433,14 @@ body.dark #open-ports-box .port-list span {
 ---------------------------------------------------------------------- */
 /* ensure the right column stays aligned to the top of the grid */
 .right-column {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  align-self: start;
 }
 
 /* — Pull Recent Alerts up to align with the top cards — */
 .right-column .card.full-height.wide-card {
-  height: 100%;
+  margin-top: -180px;  /* tweak this until it sits level with your top row */
+  max-height: calc(100vh - 140px);     /* viewport height minus that offset */
   display: flex;
   flex-direction: column;
-  padding-bottom: 0; /* optional: remove extra padding at bottom */
+  overflow: hidden;                    /* hide overflow on the card itself */
 }
