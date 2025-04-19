@@ -85,6 +85,7 @@ body {
   gap: 24px;
   padding: 30px 40px;
   align-items: start;
+  margin-right: 380px;    /* (fixed panel width + its side padding) */
 }
 
 .left-column,
@@ -475,4 +476,34 @@ body.dark #open-ports-box .port-list span {
   max-height: none;  /* remove the old 400px cap */
   overflow-y: auto;  /* keep the scrollbar */
   padding-right: 8px;/* preserve your scrollbar padding */
+}
+
+/* at the very bottom of style.css */
+
+/* 1. Pin the entire right column (Recent Alerts) to the viewport */
+.right-column {
+  position: fixed;          /* take it out of the document flow */
+  top: 60px;                /* directly under your topnav (adjust if your nav is taller/shorter) */
+  right: 20px;              /* gap from the right edge */
+  bottom: 20px;             /* gap from the bottom edge */
+  width: 320px;             /* or whatever width you prefer */
+  display: flex;            /* so the inner card can stretch */
+  flex-direction: column;
+  z-index: 1000;            /* keep it on top */
+  background: var(--bg);    /* match the page bg or card bg */
+}
+
+/* 2. Make the card inside fill the space */
+.right-column .card.full-height {
+  flex: 1;                  /* stretch to fill the fixed container */
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. Let the alerts list scroll in that full‑height card */
+.right-column .alerts-container {
+  flex: 1;               /* take up remaining space under the title/timestamp */
+  overflow-y: auto;      /* show a scrollbar when needed */
+  max-height: none;      /* remove any earlier height limits */
+  padding-right: 8px;    /* preserve that scrollbar padding */
 }
