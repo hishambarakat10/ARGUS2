@@ -51,19 +51,19 @@ body {
 /* Top Cards – left‑aligned, auto‑sized */
 .top-cards {
   display: flex;
-  justify-content: flex-start;       /* move cards to the left */
-  gap: 15px;                          /* a little tighter spacing */
-  padding: 20px 20px 0;               /* cut the side padding down */
+  justify-content: flex-start;
+  gap: 15px;
+  padding: 20px 20px 0;
 }
 
 .top-cards .card {
-  flex: 0 0 auto;                     /* don’t stretch, size to content */
-  min-width: 120px;                   /* ensure a reasonable minimum */
+  flex: 0 0 auto;
+  min-width: 120px;
   text-align: center;
   background: var(--card-bg);
   border-radius: 18px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 15px 20px;                 /* less internal padding */
+  padding: 15px 20px;
 }
 
 .card-title {
@@ -428,4 +428,17 @@ body.dark .all-devices a {
 body.dark #open-ports-box .service-list span,
 body.dark #open-ports-box .port-list span {
   color: #e0e0e0;
+}
+
+/* ------------------------------------------------------------------
+   NEW: Pin “Recent Alerts” card just below the navbar on the right
+---------------------------------------------------------------------- */
+.right-column .card.full-height.wide-card {
+  position: fixed;
+  top: 60px;                    /* just under the navbar – tweak if yours is taller/shorter */
+  right: 40px;                  /* matches your dashboard-layout’s 40px side padding */
+  width: 30%;                   /* approx the same width as your 1.5fr right column */
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  z-index: 10;
 }
