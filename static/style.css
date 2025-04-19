@@ -48,22 +48,22 @@ body {
   margin-left: 10px;
 }
 
-/* Top Cards */
+/* Top Cards – left‑aligned, auto‑sized */
 .top-cards {
   display: flex;
-  justify-content: center;
-  gap: 20px;
-  padding: 20px 40px 0;
+  justify-content: flex-start;       /* move cards to the left */
+  gap: 15px;                          /* a little tighter spacing */
+  padding: 20px 20px 0;               /* cut the side padding down */
 }
 
 .top-cards .card {
-  flex: 1;
-  min-width: 180px;
+  flex: 0 0 auto;                     /* don’t stretch, size to content */
+  min-width: 120px;                   /* ensure a reasonable minimum */
   text-align: center;
   background: var(--card-bg);
   border-radius: 18px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 25px 30px;
+  padding: 15px 20px;                 /* less internal padding */
 }
 
 .card-title {
