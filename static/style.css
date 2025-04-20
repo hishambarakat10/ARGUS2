@@ -464,7 +464,8 @@ body.dark #open-ports-box .port-list span {
    Turn the Open‑Ports card (it's the 2nd .small-card in .left-column)
    into a two‑column layout so names and ports sit side‑by‑side
 ───────────────────────────────────────────────────────────── */
-.left-column .card.small-card:nth-of-type(2) {
+/* NEW: apply to the Open‑Ports small‑card in the center column */
+.center-column .card.small-card {
   display: flex;
   gap: 20px;
   align-items: flex-start;
