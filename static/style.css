@@ -438,3 +438,20 @@ body.dark .all-devices a {
   margin-top: 92px; /* Adjust this number if needed */
   height: fit-content;
 }
+
+/* Open Ports Card - push it up below top cards */
+#open-ports-card {
+  margin-top: 20px;
+}
+
+/* Remove extra spacing in center column */
+.center-column {
+  gap: 20px;
+}
+
+/* Make sure the row with pie + alerts chart is full width */
+.center-column .row {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+}
