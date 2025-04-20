@@ -148,7 +148,6 @@ body {
   margin-bottom: 10px;
 }
 .alerts-container {
-  gap: 400px;
   flex: 1;
   margin-top: 12px;
   overflow-y: auto;
@@ -170,6 +169,7 @@ body {
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 12px;
 }
 .alert-text {
   display: flex;
