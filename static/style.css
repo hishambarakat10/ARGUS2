@@ -52,7 +52,7 @@ body {
 .top-cards {
   display: flex;
   justify-content: center;    /* ← center the cards */
-  gap: 15px;
+  gap: 30px;
   padding: 20px 0 0;          /* top padding only, no horizontal */
   width: 100%;                /* ensure full‑width container */
   margin: 0 auto;             /* center the flex container itself */
