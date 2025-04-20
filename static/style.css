@@ -412,7 +412,7 @@ body.dark .all-devices a {
   flex-direction: column;
   overflow: hidden;
   max-width: 600px; /* adjust this value to desired size */
-  margin-left: 100px; /* push it left if needed */
+  margin-left: -100px; /* push it left if needed */
 }
 /* Shrink first small‑card (CPU) to its content */
 .left-column .card.small-card:first-child {
