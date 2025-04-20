@@ -41,7 +41,7 @@
     </div>
   </div>
 
-  <!-- Updated Layout -->
+  <!-- Dashboard Layout -->
   <div class="dashboard-layout">
     <div class="left-column">
       <!-- CPU card -->
@@ -52,21 +52,22 @@
         </div>
         <div class="circle-wrap">…</div>
       </div>
-      <!-- Alerts‑Over‑Time -->
+      <!-- Alerts Over Time -->
       <div class="card">
         <h2>Alerts Over Time</h2>
         <canvas id="lineChart" width="600" height="250"></canvas>
       </div>
     </div>
-  
+
     <div class="center-column">
-      <!-- Open‑Ports card -->
+      <!-- Open‑Ports card using row/column -->
       <div class="card small-card">
-        <div id="port-services"></div>
-        <div id="open-ports-box"></div>
+        <div class="row">
+          <div id="port-services" class="column"></div>
+          <div id="open-ports-box" class="column"></div>
+        </div>
       </div>
-  
-      <!-- Severity pie chart -->
+      <!-- Pie Chart -->
       <div class="card">
         <h2>Severity Breakdown</h2>
         <canvas id="pieChart" width="300" height="200"></canvas>
