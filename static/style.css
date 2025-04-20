@@ -476,3 +476,11 @@ body.dark .all-devices a {
 #sortButton:hover {
   background-color: #0056b3;
 }
+
+.top-cards-left {
+  display: flex;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 0;
+  margin-bottom: 20px;
+}
