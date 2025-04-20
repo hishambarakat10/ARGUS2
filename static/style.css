@@ -369,12 +369,12 @@ body.dark .all-devices a {
    NEW: Open‑Ports card two‑column layout
 ───────────────────────────────────────────────── */
 .center-column .card.small-card {
-  margin-top: 200px;
   display: flex;
   gap: 40px;
 }
 #port-services,
 #open-ports-box {
+  margin-top: 100px;
   flex: 1;
   display: flex;
   flex-direction: column;
