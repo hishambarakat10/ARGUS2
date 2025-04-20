@@ -418,3 +418,18 @@ body.dark .all-devices a {
   align-self: flex-start;
   width: fit-content;
 }
+
+/* Fix two-column alignment inside Open Ports card */
+.center-column .card.small-card .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  width: 100%;
+}
+
+.center-column .card.small-card .column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
