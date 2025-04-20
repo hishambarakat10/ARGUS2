@@ -403,11 +403,11 @@ body.dark .all-devices a {
 
 /* Pin Recent Alerts under the navbar */
 .right-column {
-  align-self: start;
+  align-self: stretch;
 }
 .right-column .card.full-height.wide-card {
   margin-top: 15px;
-  max-height: 9500px;
+  max-height: 2500px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
