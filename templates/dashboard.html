@@ -44,6 +44,12 @@
   <!-- Dashboard Layout -->
   <div class="dashboard-layout">
     <div class="left-column">
+      <div class="card small-card" id="virustotal-card">
+        <h3>VirusTotal IP Lookup</h3>
+        <input type="text" id="ipInput" placeholder="Enter IP address..." style="padding: 6px; width: 80%;">
+        <button onclick="lookupIP()">Lookup</button>
+        <div id="vt-result" style="margin-top: 10px; font-size: 14px;"></div>
+      </div>      
       <!-- CPU Health Card -->
       <div class="card small-card">
         <div class="left-section">
@@ -349,6 +355,40 @@
     }
     updateWindowsLogCount();
     setInterval(updateWindowsLogCount, 5000);
+
+    function lookupIP() {
+      const ip = document.getElementById("ipInput").value;
+      const resultBox = document.getElementById("vt-result");
+      if (!ip) {
+        resultBox.innerHTML = "Please enter an IP.";
+        return;
+      }
+    
+      resultBox.innerHTML = "Looking up...";
+      fetch("/api/virustotal/ip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ip: ip })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          resultBox.innerHTML = `<span style="color:red;">Error: ${data.error}</span>`;
+        } else {
+          const stats = data.data.attributes.last_analysis_stats;
+          resultBox.innerHTML = `
+            Harmless: ${stats.harmless}<br>
+            Malicious: ${stats.malicious}<br>
+            Suspicious: ${stats.suspicious}<br>
+            Undetected: ${stats.undetected}
+          `;
+        }
+      })
+      .catch(err => {
+        resultBox.innerHTML = `<span style="color:red;">Failed to get report.</span>`;
+        console.error(err);
+      });
+    }    
   </script>
 </body>
 </html>
