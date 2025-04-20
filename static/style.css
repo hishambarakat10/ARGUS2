@@ -51,11 +51,12 @@ body {
 /* Top Cards – left‑aligned, auto‑sized */
 .top-cards {
   display: flex;
-  justify-content: center;    /* ← center the cards */
-  gap: 100px;
-  padding: 20px 0 0;          /* top padding only, no horizontal */
-  width: 100%;                /* ensure full‑width container */
-  margin: 0 auto;             /* center the flex container itself */
+  justify-content: center;   /* center the cards */
+  gap: 30px;                  /* space between them */
+  padding: 20px 0 0;
+  max-width: 1200px;          /* cap the overall width */
+  margin: 0 auto;             /* center the flex container */
+  width: 100%;
 }
 
 .top-cards .card {
@@ -86,6 +87,9 @@ body {
   grid-template-columns: 1fr 2fr 1.5fr;
   gap: 24px;
   padding: 30px 40px;
+  max-width: 1200px;   /* same max-width */
+  margin: 0 auto;      /* center the grid */
+  width: 100%;
   align-items: start;
 }
 
