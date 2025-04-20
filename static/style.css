@@ -50,7 +50,7 @@ body {
 .top-cards {
   display: flex;
   justify-content: flex-start;
-  gap: 60px;
+  gap: 100px;
   padding: 20px 0 0 300px;
   max-width: 1200px;
   width: 100%;
