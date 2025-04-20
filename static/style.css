@@ -483,3 +483,9 @@ body.dark .all-devices a {
   border-radius: 8px;
   margin-top: 6px;
 }
+
+.cpu-icon {
+  width: 30px;
+  height: 30px;
+  margin-left: 20px;
+}
