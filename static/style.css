@@ -31,14 +31,12 @@ body {
   justify-content: space-between;
   align-items: center;
 }
-
 .topnav a {
   color: white;
   font-weight: bold;
   margin-left: 15px;
   text-decoration: none;
 }
-
 .theme-btn {
   background: none;
   border: none;
@@ -48,34 +46,31 @@ body {
   margin-left: 10px;
 }
 
-/* Top Cards – left‑aligned, auto‑sized */
+/* Top Cards */
 .top-cards {
   display: flex;
-  justify-content: flex-start;  /* left‑align the cards */
-  gap: 30px;                     /* your desired spacing */
-  padding: 20px 0 0 300px;        /* top/right/bottom/left — 60px inset */
+  justify-content: flex-start;
+  gap: 30px;
+  padding: 20px 0 0 300px;
   max-width: 1200px;
   width: 100%;
-  margin: 0 auto;               /* keeps overall container centered if the window is very wide */
+  margin: 0 auto;
 }
-
 .top-cards .card {
   flex: 0 0 auto;
   min-width: 120px;
   text-align: center;
   background: var(--card-bg);
   border-radius: 18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   padding: 15px 20px;
 }
-
 .card-title {
   font-weight: 600;
   font-size: 14px;
   text-transform: uppercase;
   margin-bottom: 10px;
 }
-
 .card-number {
   font-size: 36px;
   font-weight: 700;
@@ -87,12 +82,11 @@ body {
   grid-template-columns: 1fr 2fr 1.5fr;
   gap: 24px;
   padding: 30px 40px;
-  max-width: 1200px;   /* same max-width */
-  margin: 0 auto;      /* center the grid */
+  max-width: 1200px;
+  margin: 0 auto;
   width: 100%;
   align-items: start;
 }
-
 .left-column,
 .center-column,
 .right-column {
@@ -100,24 +94,21 @@ body {
   flex-direction: column;
   gap: 20px;
 }
-
 .small-card {
   padding: 15px;
   background: var(--card-bg);
   border-radius: 18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
-
 .card {
   background: var(--card-bg);
   border-radius: 18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   padding: 25px 30px;
 }
-
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
 }
 
 /* CPU Health Circle */
@@ -126,17 +117,14 @@ body {
   height: 100px;
   position: relative;
 }
-
 .circle-bg,
 .circle-progress {
   fill: none;
   stroke-width: 8;
 }
-
 .circle-bg {
   stroke: #eee;
 }
-
 .circle-progress {
   stroke: var(--accent);
   stroke-dasharray: 276;
@@ -145,7 +133,6 @@ body {
   transform: rotate(-90deg);
   transform-origin: center;
 }
-
 .circle-text {
   position: absolute;
   top: 35%;
@@ -161,15 +148,11 @@ body {
   font-weight: 700;
   margin-bottom: 10px;
 }
-
-/* Make the list fill the remaining space and scroll */
 .alerts-container {
-  flex: 1;                             /* grow to fill card */
-  margin-top: 12px;                    /* small gap after “Last Updated” */
-  overflow-y: auto;                    /* vertical scroll only */
-  /* remove any max-height here */
+  flex: 1;
+  margin-top: 12px;
+  overflow-y: auto;
 }
-
 .alerts-container::-webkit-scrollbar {
   width: 6px;
 }
@@ -177,7 +160,6 @@ body {
   background-color: var(--scroll-thumb);
   border-radius: 4px;
 }
-
 .alert-box {
   background-color: var(--card-bg);
   color: var(--text);
@@ -187,39 +169,33 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
-
 .alert-text {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .alert-title {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
 }
-
 .alert-time {
   font-size: 13px;
   margin: 0;
   color: var(--text);
 }
-
 .alert-status {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   margin-left: 20px;
 }
-
 .right-column .card.full-height {
   flex-grow: 1;
   overflow-y: auto;
 }
-
 .right-column .wide-card {
   height: 100%;
 }
@@ -240,7 +216,6 @@ body {
   border: none;
   cursor: pointer;
 }
-
 #chat-window {
   display: none;
   flex-direction: column;
@@ -251,12 +226,11 @@ body {
   max-height: 500px;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
   z-index: 999;
   overflow: hidden;
   font-family: 'Inter', sans-serif;
 }
-
 #chat-header {
   background: linear-gradient(to right, #9b2cff, #ff2cb4);
   color: white;
@@ -265,7 +239,6 @@ body {
   text-align: center;
   font-size: 16px;
 }
-
 #chat-subtitle {
   font-size: 14px;
   padding: 10px 16px;
@@ -273,7 +246,6 @@ body {
   background-color: #f7f7f7;
   border-bottom: 1px solid #eee;
 }
-
 #chat-hint {
   position: fixed;
   bottom: 90px;
@@ -282,36 +254,31 @@ body {
   color: white;
   padding: 6px 12px;
   border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   font-size: 14px;
   z-index: 999;
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.4s ease-in-out;
 }
-
 #chat-hint.show {
   opacity: 1;
 }
-
 #chat-window.open {
   display: flex;
 }
-
 #chat-input-container {
   display: flex;
   padding: 10px;
   border-top: 1px solid #eee;
   background-color: #fff;
 }
-
 #chatbox {
   flex-grow: 1;
   padding: 12px;
   overflow-y: auto;
   background: #fafafa;
 }
-
 #chatbox div {
   margin-bottom: 10px;
   max-width: 75%;
@@ -320,21 +287,18 @@ body {
   font-size: 14px;
   word-wrap: break-word;
 }
-
 #chatbox .user {
   background-color: #007bff;
   color: white;
   align-self: flex-end;
   margin-left: auto;
 }
-
 #chatbox .bot {
   background-color: #e6e6e6;
   color: #333;
   align-self: flex-start;
   margin-right: auto;
 }
-
 #chatInput {
   flex: 1;
   padding: 10px 12px;
@@ -343,7 +307,6 @@ body {
   outline: none;
   font-size: 14px;
 }
-
 #sendBtn {
   background: linear-gradient(to right, #9b2cff, #ff2cb4);
   border: none;
@@ -355,7 +318,6 @@ body {
   font-weight: bold;
   transition: background 0.3s;
 }
-
 #sendBtn:hover {
   opacity: 0.9;
 }
@@ -369,7 +331,6 @@ button {
   border-radius: 4px;
   cursor: pointer;
 }
-
 button:hover {
   background-color: #0056b3;
 }
@@ -380,26 +341,24 @@ body.dark .card-number,
 body.dark .dashboard-title {
   color: #fff;
 }
-
 body.dark .card,
 body.dark .top-cards .card {
   background-color: var(--card-bg);
   color: var(--text);
-  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 10px rgba(255,255,255,0.05);
 }
-
 body.dark .all-window a,
 body.dark .all-devices a {
   color: white;
 }
 
+/* Charts sizing */
 #lineChart,
 #pieChart {
   max-width: 100%;
   max-height: 250px;
   height: 250px;
 }
-
 .center-column .card {
   height: 320px;
   display: flex;
@@ -407,80 +366,55 @@ body.dark .all-devices a {
   justify-content: space-between;
 }
 
-.right-section#open-ports-box {
+/* ────────────────────────────────────────────────
+   NEW: Open‑Ports card two‑column layout
+───────────────────────────────────────────────── */
+.center-column .card.small-card {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   gap: 40px;
-  width: 100%;
 }
-
-#open-ports-box .service-list,
-#open-ports-box .port-list {
+#port-services,
+#open-ports-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#port-services h3,
+#open-ports-box h3 {
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 14px;
+}
+.service-list,
+.port-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 14px;
   font-weight: 500;
 }
-
-#open-ports-box .service-list span,
-#open-ports-box .port-list span {
+.service-list span,
+.port-list span {
   padding: 2px 0;
 }
 
-body.dark #open-ports-box .service-list span,
-body.dark #open-ports-box .port-list span {
-  color: #e0e0e0;
-}
-
-/* ------------------------------------------------------------------
-   NEW: Pin “Recent Alerts” card just below the navbar on the right
----------------------------------------------------------------------- */
-/* ensure the right column stays aligned to the top of the grid */
+/* Pin Recent Alerts under the navbar */
 .right-column {
   align-self: start;
 }
-
-/* — Pull Recent Alerts up to align with the top cards — */
 .right-column .card.full-height.wide-card {
-  margin-top: -180px;  /* tweak this until it sits level with your top row */
-  max-height: calc(100vh - 140px);     /* viewport height minus that offset */
+  margin-top: -180px;
+  max-height: calc(100vh - 140px);
   display: flex;
   flex-direction: column;
-  overflow: hidden;                    /* hide overflow on the card itself */
+  overflow: hidden;
 }
-
-/* Shrink only the CPU‑Health small‑card to its content */
+/* Shrink first small‑card (CPU) to its content */
 .left-column .card.small-card:first-child {
-  /* don’t stretch to full column width */
   align-self: flex-start;
-
-  /* size to exactly fit its contents */
   width: fit-content;
-}
-
-/* ─────────────────────────────────────────────────────────────
-   Turn the Open‑Ports card (it's the 2nd .small-card in .left-column)
-   into a two‑column layout so names and ports sit side‑by‑side
-───────────────────────────────────────────────────────────── */
-/* NEW: apply to the Open‑Ports small‑card in the center column */
-.center-column .card.small-card {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-/* Make each column stack its own heading + items */
-#port-services,
-#open-ports-box {
-  flex: 1;                     /* split the space evenly */
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-#port-services h3,
-#open-ports-box h3 {
-  margin-bottom: 8px;
 }
