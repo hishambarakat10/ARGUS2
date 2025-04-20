@@ -407,7 +407,7 @@ body.dark .all-devices a {
 }
 .right-column .card.full-height.wide-card {
   margin-top: 15px;
-  max-height: calc(100vh - 50px);
+  max-height: calc(100vh - 1px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
