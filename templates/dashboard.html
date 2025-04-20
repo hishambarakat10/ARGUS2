@@ -44,7 +44,7 @@
   <!-- Updated Layout -->
   <div class="dashboard-layout">
     <div class="left-column">
-      <!-- CPU card stays here -->
+      <!-- CPU card -->
       <div class="card small-card">
         <div class="left-section">
           <h3>WINSPC-01</h3>
@@ -52,8 +52,7 @@
         </div>
         <div class="circle-wrap">…</div>
       </div>
-  
-      <!-- Move Alerts‑Over‑Time here -->
+      <!-- Alerts‑Over‑Time -->
       <div class="card">
         <h2>Alerts Over Time</h2>
         <canvas id="lineChart" width="600" height="250"></canvas>
@@ -61,26 +60,19 @@
     </div>
   
     <div class="center-column">
-      <!-- Move Open‑Ports here -->
+      <!-- Open‑Ports card -->
       <div class="card small-card">
-        <div class="left-section" id="port-services">
-          <h3>WINSPC-01</h3>
-          <span>Loading services...</span>
-        </div>
-        <div class="right-section" id="open-ports-box">
-          <h3>Open Ports</h3>
-          <span>Loading...</span>
-        </div>
+        <div id="port-services"></div>
+        <div id="open-ports-box"></div>
       </div>
   
-      <!-- pie chart remains -->
+      <!-- Severity pie chart -->
       <div class="card">
         <h2>Severity Breakdown</h2>
         <canvas id="pieChart" width="300" height="200"></canvas>
       </div>
     </div>
 
-    <!-- RIGHT COLUMN -->
     <div class="right-column">
       <div class="card full-height wide-card">
         <h1 class="dashboard-title">Recent Alerts</h1>
@@ -157,11 +149,8 @@
                 y: {
                   beginAtZero: true,
                   title: { display: true, text: 'Alerts' },
-                  ticks: {
-                    stepSize: 1,
-                    precision: 0
-                  }
-                }                
+                  ticks: { stepSize: 1, precision: 0 }
+                }
               }
             }
           });
@@ -180,7 +169,7 @@
               labels: data.labels,
               datasets: [{
                 data: data.percentages,
-                backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#33FFF5'],
+                backgroundColor: ['#FF5733','#33FF57','#3357FF','#FF33A6','#33FFF5'],
                 borderColor: '#fff',
                 borderWidth: 1
               }]
@@ -188,9 +177,7 @@
             options: {
               responsive: true,
               maintainAspectRatio: false,
-              plugins: {
-                legend: { position: 'bottom' }
-              }
+              plugins: { legend: { position: 'bottom' } }
             }
           });
         });
@@ -198,175 +185,145 @@
 
     function updateOpenPorts() {
       const portMap = {
-        21: "FTP",
-        22: "SSH",
-        23: "Telnet",
-        25: "SMTP",
-        53: "DNS",
-        80: "HTTP",
-        110: "POP3",
-        139: "NetBIOS",
-        143: "IMAP",
-        443: "HTTPS",
-        3306: "MySQL",
-        3389: "RDP",
-        8080: "HTTP-ALT"
-        // Add more as needed
+        21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP",
+        53: "DNS", 80: "HTTP", 110: "POP3", 139: "NetBIOS",
+        143: "IMAP", 443: "HTTPS", 3306: "MySQL",
+        3389: "RDP", 8080: "HTTP-ALT"
       };
-    
+
       fetch('/api/ports')
         .then(res => res.json())
         .then(data => {
-          const box = document.getElementById("open-ports-box");
-          const servicesBox = document.getElementById("port-services");
-    
           if (!Array.isArray(data)) return;
-          
-          servicesBox.innerHTML = "<h3>WINSPC-01</h3>";
-          box.innerHTML = "<h3>Open Ports</h3>";
-    
+          const servicesBox = document.getElementById("port-services");
+          const portsBox    = document.getElementById("open-ports-box");
+
+          servicesBox.innerHTML = `
+            <h3>WINSPC-01</h3>
+            <div class="service-list"></div>
+          `;
+          portsBox.innerHTML = `
+            <h3>OPEN PORTS</h3>
+            <div class="port-list"></div>
+          `;
+
+          const svcList  = servicesBox.querySelector('.service-list');
+          const portList = portsBox.querySelector('.port-list');
+
           data.forEach(port => {
-            const portNum = parseInt(port);
-            const service = portMap[portNum] || "Unknown";
-            // only service name over on the left…
-            servicesBox.innerHTML += `<span>${service}</span>`;
-            // …and only the port on the right
-            box.innerHTML         += `<span>${port}</span>`;
+            const service = portMap[parseInt(port,10)] || "Unknown";
+            svcList.innerHTML  += `<span>${service}</span>`;
+            portList.innerHTML += `<span>Port ${port}</span>`;
           });
         })
-        .catch(err => {
-          console.error("Error fetching open ports:", err);
-        });
-    }    
+        .catch(err => console.error("Error fetching open ports:", err));
+    }
 
     function fetchLogs() {
       fetch('/api/logs')
-        .then(response => response.json())
-        .then(logs => updateAlerts(logs))
-        .catch(err => console.error("Log fetch error:", err));
+        .then(res => res.json())
+        .then(updateAlerts)
+        .catch(console.error);
     }
 
     function sendMessage() {
       const input = document.getElementById("chatInput");
-      const message = input.value.trim();
-      if (!message) return;
+      const msg   = input.value.trim();
+      if (!msg) return;
       const chatbox = document.getElementById("chatbox");
-      chatbox.innerHTML += `<div class="user">${message}</div>`;
+      chatbox.innerHTML += `<div class="user">${msg}</div>`;
       input.value = "";
       fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message: msg})
       })
-      .then(response => response.json())
-      .then(data => {
-        chatbox.innerHTML += `<div class="bot">${data.response}</div>`;
+      .then(r=>r.json())
+      .then(d=> {
+        chatbox.innerHTML += `<div class="bot">${d.response}</div>`;
         chatbox.scrollTop = chatbox.scrollHeight;
       })
-      .catch(err => {
-        chatbox.innerHTML += `<div><strong>Error:</strong> ${err}</div>`;
-      });
+      .catch(e=> chatbox.innerHTML += `<div><strong>Error:</strong> ${e}</div>`);
     }
 
     function updateEventCount() {
       fetch('/api/event-count')
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById("event-count").textContent = data.count;
-        })
-        .catch(err => {
-          console.error("Error fetching event count:", err);
-        });
+        .then(r=>r.json())
+        .then(d=> document.getElementById("event-count").textContent = d.count)
+        .catch(console.error);
     }
 
     function updateCPUHealth() {
       fetch('/api/cpu')
-        .then(res => res.json())
-        .then(data => {
-          const usage = Math.round(data.cpu);
-          const cpuHealthElement = document.querySelector(".circle-text");
-          const progressCircle = document.querySelector(".circle-progress");
-          cpuHealthElement.textContent = `${usage}%`;
+        .then(r=>r.json())
+        .then(d=>{
+          const usage = Math.round(d.cpu);
+          document.querySelector(".circle-text").textContent = `${usage}%`;
           const maxOffset = 276;
-          const newOffset = maxOffset - (maxOffset * usage) / 100;
-          progressCircle.style.strokeDashoffset = newOffset;
+          document.querySelector(".circle-progress")
+            .style.strokeDashoffset = maxOffset - (maxOffset * usage)/100;
         })
-        .catch(err => console.error("CPU fetch error:", err));
+        .catch(console.error);
     }
 
-    const socket = io({ transports: ['websocket'] });
-    socket.on("connect", () => console.log("✅ Socket connected"));
-    socket.on("update_charts", () => {
-      updateLineChart();
-      updatePieChart();
-      fetchLogs();
-      updateOpenPorts();
+    const socket = io({ transports:['websocket'] });
+    socket.on("connect",()=>console.log("✅ Socket connected"));
+    socket.on("update_charts",()=>{
+      updateLineChart(); updatePieChart();
+      fetchLogs(); updateOpenPorts();
     });
 
+    // initial load & intervals
     updateLineChart();
     updatePieChart();
     fetchLogs();
     updateOpenPorts();
     updateEventCount();
     updateCPUHealth();
-
     setInterval(fetchLogs, 5000);
     setInterval(updateOpenPorts, 5000);
     setInterval(updateEventCount, 5000);
     setInterval(updateCPUHealth, 5000);
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const theme = localStorage.getItem('theme');
-      if (theme === 'dark') {
+    // theme toggle
+    document.addEventListener('DOMContentLoaded',()=>{
+      if(localStorage.getItem('theme')==='dark'){
         document.body.classList.add('dark');
-        document.getElementById('theme-toggle').textContent = '🌞';
+        document.getElementById('theme-toggle').textContent='🌞';
       }
     });
+    document.getElementById('theme-toggle')
+      .addEventListener('click',()=>{
+        const dark = document.body.classList.toggle('dark');
+        localStorage.setItem('theme', dark?'dark':'light');
+        document.getElementById('theme-toggle').textContent = dark?'🌞':'🌙';
+      });
 
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-      const isDark = document.body.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      document.getElementById('theme-toggle').textContent = isDark ? '🌞' : '🌙';
-    });
-
-    document.getElementById("chat-button").addEventListener("click", () => {
-      document.getElementById("chat-window").classList.toggle("open");
-    });
-
-    window.addEventListener("load", () => {
+    // chat button & hint
+    document.getElementById("chat-button")
+      .addEventListener("click",()=> document.getElementById("chat-window").classList.toggle("open"));
+    window.addEventListener("load",()=>{
       const hint = document.getElementById("chat-hint");
-      const chatButton = document.getElementById("chat-button");
-      const chatWindow = document.getElementById("chat-window");
+      const win  = document.getElementById("chat-window");
       hint.classList.add("show");
-      hint.addEventListener("click", () => {
-        chatWindow.classList.add("open");
+      hint.addEventListener("click",()=>{
+        win.classList.add("open");
         hint.classList.remove("show");
       });
-      setTimeout(() => {
-        hint.classList.remove("show");
-      }, 7000);
+      setTimeout(()=> hint.classList.remove("show"),7000);
     });
+    document.getElementById("chatInput")
+      .addEventListener("keypress",e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMessage(); } });
 
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("chatInput").addEventListener("keypress", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
-    });
-  </script>
-
-  <script>
+    // Windows logs count
     function updateWindowsLogCount() {
       fetch('/api/windows_log_count')
-        .then(res => res.json())
-        .then(data => {
-          document.querySelector('.card2 .card-number').textContent = data.count;
-        });
+        .then(r=>r.json())
+        .then(d=> document.querySelector('.card2 .card-number').textContent = d.count)
+        .catch(console.error);
     }
-    setInterval(updateWindowsLogCount, 5000);  // every 5 seconds
-    updateWindowsLogCount();  // initial load
-    </script>
+    updateWindowsLogCount();
+    setInterval(updateWindowsLogCount, 5000);
+  </script>
 </body>
 </html>
