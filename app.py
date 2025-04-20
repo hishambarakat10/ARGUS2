@@ -25,6 +25,7 @@ def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Replace with something secure
+VIRUSTOTAL_API_KEY = "111a10aea56259d602d50d583fbe32a130c4a3f1e8fe9b5e258eb2f184e211bf"  # Replace this with your actual key
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 log_data = []
@@ -211,6 +212,27 @@ def all_devices():
     with open('windows_health.json') as f:
         devices = json.load(f)
     return render_template("alldevices.html", devices=devices)
+
+@app.route("/api/virustotal/ip", methods=["POST"])
+def virustotal_ip_lookup():
+    data = request.get_json()
+    ip = data.get("ip")
+    if not ip:
+        return jsonify({"error": "IP address required"}), 400
+
+    url = f"https://www.virustotal.com/api/v3/ip_addresses/{ip}"
+    headers = {
+        "x-apikey": VIRUSTOTAL_API_KEY
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to retrieve data"}), response.status_code
+        vt_data = response.json()
+        return jsonify(vt_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # BACKGROUND LOG MONITORING
