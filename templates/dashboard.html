@@ -44,7 +44,7 @@
   <!-- Dashboard Layout -->
   <div class="dashboard-layout">
     <div class="left-column">
-      <!-- CPU card -->
+      <!-- CPU Health Card -->
       <div class="card small-card">
         <div class="left-section">
           <h3>WINSPC-01</h3>
@@ -52,25 +52,30 @@
         </div>
         <div class="circle-wrap">…</div>
       </div>
-      <!-- Alerts Over Time -->
-      <div class="card">
-        <h2>Alerts Over Time</h2>
-        <canvas id="lineChart" width="600" height="250"></canvas>
-      </div>
     </div>
 
     <div class="center-column">
-      <!-- Open‑Ports card using row/column -->
-      <div class="card small-card">
+      <!-- Open Ports -->
+      <div class="card small-card" id="open-ports-card">
         <div class="row">
           <div id="port-services" class="column"></div>
           <div id="open-ports-box" class="column"></div>
         </div>
       </div>
-      <!-- Pie Chart -->
-      <div class="card">
-        <h2>Severity Breakdown</h2>
-        <canvas id="pieChart" width="300" height="200"></canvas>
+
+      <!-- Row with Pie Chart and Alerts Over Time -->
+      <div class="row" style="display: flex; gap: 24px;">
+        <!-- Pie Chart -->
+        <div class="card" style="flex: 1;">
+          <h2>Severity Breakdown</h2>
+          <canvas id="pieChart" width="300" height="200"></canvas>
+        </div>
+
+        <!-- Alerts Over Time -->
+        <div class="card" style="flex: 1.4; height: 320px;" id="alerts-over-time-card">
+          <h2>Alerts Over Time</h2>
+          <canvas id="lineChart" width="600" height="250"></canvas>
+        </div>
       </div>
     </div>
 
@@ -274,7 +279,6 @@
       fetchLogs(); updateOpenPorts();
     });
 
-    // initial load & intervals
     updateLineChart();
     updatePieChart();
     fetchLogs();
@@ -286,7 +290,6 @@
     setInterval(updateEventCount, 5000);
     setInterval(updateCPUHealth, 5000);
 
-    // theme toggle
     document.addEventListener('DOMContentLoaded',()=>{
       if(localStorage.getItem('theme')==='dark'){
         document.body.classList.add('dark');
@@ -300,7 +303,6 @@
         document.getElementById('theme-toggle').textContent = dark?'🌞':'🌙';
       });
 
-    // chat button & hint
     document.getElementById("chat-button")
       .addEventListener("click",()=> document.getElementById("chat-window").classList.toggle("open"));
     window.addEventListener("load",()=>{
@@ -316,7 +318,6 @@
     document.getElementById("chatInput")
       .addEventListener("keypress",e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMessage(); } });
 
-    // Windows logs count
     function updateWindowsLogCount() {
       fetch('/api/windows_log_count')
         .then(r=>r.json())
