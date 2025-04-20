@@ -53,7 +53,7 @@ body {
   display: flex;
   justify-content: flex-start;  /* left‑align the cards */
   gap: 30px;                     /* your desired spacing */
-  padding: 20px 0 0 60px;        /* top/right/bottom/left — 60px inset */
+  padding: 20px 0 0 100px;        /* top/right/bottom/left — 60px inset */
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;               /* keeps overall container centered if the window is very wide */
