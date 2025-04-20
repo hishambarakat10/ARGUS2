@@ -80,13 +80,12 @@ body {
 .dashboard-layout {
   display: grid;
   grid-template-columns: 1fr 2fr 1.5fr;
-  gap: 24px;
+  gap: 32px;
   padding: 30px 40px;
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
   align-items: start;
 }
+
 .left-column,
 .center-column,
 .right-column {
