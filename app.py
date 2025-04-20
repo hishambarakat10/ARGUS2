@@ -206,6 +206,12 @@ def all_windows():
     total_events = len(data)
     return render_template('allwindows.html', all_windows = data)
 
+@app.route("/alldevices.html")
+def all_devices():
+    with open('windows_health.json') as f:
+        devices = json.load(f)
+    return render_template("alldevices.html", devices=devices)
+
 # ============================
 # BACKGROUND LOG MONITORING
 # ============================
