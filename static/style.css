@@ -423,6 +423,7 @@ body.dark .all-devices a {
 
 /* Fix two-column alignment inside Open Ports card */
 .center-column .card.small-card .row {
+  margin-top: 50px;
   display: flex;
   justify-content: space-between;
   gap: 40px;
@@ -438,7 +439,7 @@ body.dark .all-devices a {
 
 /* Align Open Ports card with bottom of CPU Health box */
 .center-column .card.small-card {
-  margin-top: 125px; /* Adjust this number if needed */
+  margin-top: 92px; /* Adjust this number if needed */
   height: fit-content;
 }
 
