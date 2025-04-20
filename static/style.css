@@ -450,3 +450,12 @@ body.dark #open-ports-box .port-list span {
   flex-direction: column;
   overflow: hidden;                    /* hide overflow on the card itself */
 }
+
+/* Shrink only the CPU‑Health small‑card to its content */
+.left-column .card.small-card:first-child {
+  /* don’t stretch to full column width */
+  align-self: flex-start;
+
+  /* size to exactly fit its contents */
+  width: fit-content;
+}
