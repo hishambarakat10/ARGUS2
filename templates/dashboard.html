@@ -52,6 +52,12 @@
         </div>
         <div class="circle-wrap">…</div>
       </div>
+    
+      <!-- Pie Chart under CPU -->
+      <div class="card">
+        <h2>Severity Breakdown</h2>
+        <canvas id="pieChart" width="300" height="200"></canvas>
+      </div>
     </div>
 
     <div class="center-column">
@@ -62,20 +68,11 @@
           <div id="open-ports-box" class="column"></div>
         </div>
       </div>
-
-      <!-- Row with Pie Chart and Alerts Over Time -->
-      <div class="row" style="display: flex; gap: 24px;">
-        <!-- Pie Chart -->
-        <div class="card" style="flex: 1;">
-          <h2>Severity Breakdown</h2>
-          <canvas id="pieChart" width="300" height="200"></canvas>
-        </div>
-
-        <!-- Alerts Over Time -->
-        <div class="card" style="flex: 1.4; height: 320px;" id="alerts-over-time-card">
-          <h2>Alerts Over Time</h2>
-          <canvas id="lineChart" width="600" height="250"></canvas>
-        </div>
+    
+      <!-- Full-width Alerts Over Time -->
+      <div class="card" id="alerts-over-time-card">
+        <h2>Alerts Over Time</h2>
+        <canvas id="lineChart" width="600" height="250"></canvas>
       </div>
     </div>
 
