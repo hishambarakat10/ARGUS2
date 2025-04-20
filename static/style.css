@@ -459,3 +459,27 @@ body.dark #open-ports-box .port-list span {
   /* size to exactly fit its contents */
   width: fit-content;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Turn the Open‑Ports card (it's the 2nd .small-card in .left-column)
+   into a two‑column layout so names and ports sit side‑by‑side
+───────────────────────────────────────────────────────────── */
+.left-column .card.small-card:nth-of-type(2) {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* Make each column stack its own heading + items */
+#port-services,
+#open-ports-box {
+  flex: 1;                     /* split the space evenly */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#port-services h3,
+#open-ports-box h3 {
+  margin-bottom: 8px;
+}
