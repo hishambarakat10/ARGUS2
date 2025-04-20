@@ -43,22 +43,25 @@
 
   <!-- Updated Layout -->
   <div class="dashboard-layout">
-    <!-- LEFT COLUMN -->
     <div class="left-column">
+      <!-- CPU card stays here -->
       <div class="card small-card">
         <div class="left-section">
           <h3>WINSPC-01</h3>
           <span>CPU Health</span>
         </div>
-        <div class="circle-wrap">
-          <svg viewBox="0 0 100 100" width="80" height="80">
-            <circle class="circle-bg" cx="50" cy="50" r="44"></circle>
-            <circle class="circle-progress" cx="50" cy="50" r="44" style="stroke-dashoffset:276;"></circle>
-          </svg>            
-          <div class="circle-text">92%</div>
-        </div>
+        <div class="circle-wrap">…</div>
       </div>
-
+  
+      <!-- Move Alerts‑Over‑Time here -->
+      <div class="card">
+        <h2>Alerts Over Time</h2>
+        <canvas id="lineChart" width="600" height="250"></canvas>
+      </div>
+    </div>
+  
+    <div class="center-column">
+      <!-- Move Open‑Ports here -->
       <div class="card small-card">
         <div class="left-section" id="port-services">
           <h3>WINSPC-01</h3>
@@ -69,14 +72,8 @@
           <span>Loading...</span>
         </div>
       </div>
-    </div>
-
-    <!-- CENTER COLUMN -->
-    <div class="center-column">
-      <div class="card">
-        <h2>Alerts Over Time</h2>
-        <canvas id="lineChart" width="600" height="250"></canvas>
-      </div>
+  
+      <!-- pie chart remains -->
       <div class="card">
         <h2>Severity Breakdown</h2>
         <canvas id="pieChart" width="300" height="200"></canvas>
