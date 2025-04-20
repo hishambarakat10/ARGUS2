@@ -50,7 +50,7 @@ body {
 .top-cards {
   display: flex;
   justify-content: flex-start;
-  gap: 100px;
+  gap: 60px;
   padding: 20px 0 0 300px;
   max-width: 1200px;
   width: 100%;
@@ -416,6 +416,7 @@ body.dark .all-devices a {
 .left-column .card.small-card:first-child {
   align-self: flex-start;
   width: fit-content;
+  min-width: 200px;
 }
 
 /* Fix two-column alignment inside Open Ports card */
