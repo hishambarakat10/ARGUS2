@@ -51,9 +51,11 @@ body {
 /* Top Cards – left‑aligned, auto‑sized */
 .top-cards {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;    /* ← center the cards */
   gap: 15px;
-  padding: 20px 20px 0;
+  padding: 20px 0 0;          /* top padding only, no horizontal */
+  width: 100%;                /* ensure full‑width container */
+  margin: 0 auto;             /* center the flex container itself */
 }
 
 .top-cards .card {
