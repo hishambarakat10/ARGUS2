@@ -488,4 +488,5 @@ body.dark .all-devices a {
   width: 150px;
   height: 150px;
   margin-left: 200px;
+  margin-top: 40px; /* Adjust to move the image down */
 }
