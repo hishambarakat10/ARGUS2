@@ -221,15 +221,17 @@
           const servicesBox = document.getElementById("port-services");
     
           if (!Array.isArray(data)) return;
-    
-          box.innerHTML = "<h3>Open Ports</h3>";
+          
           servicesBox.innerHTML = "<h3>WINSPC-01</h3>";
+          box.innerHTML = "<h3>Open Ports</h3>";
     
           data.forEach(port => {
             const portNum = parseInt(port);
             const service = portMap[portNum] || "Unknown";
-            box.innerHTML += `<span>Port ${port}</span><br>`;
-            servicesBox.innerHTML += `<span>${service} (${port})</span><br>`;
+            // only service name over on the left…
+            servicesBox.innerHTML += `<span>${service}</span>`;
+            // …and only the port on the right
+            box.innerHTML         += `<span>${port}</span>`;
           });
         })
         .catch(err => {
