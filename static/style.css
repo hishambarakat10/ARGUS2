@@ -381,7 +381,6 @@ body.dark .all-devices a {
 }
 #port-services h3,
 #open-ports-box h3 {
-  margin-top: 100px;
   margin: 0;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
@@ -462,7 +461,6 @@ body.dark .all-devices a {
 
 /* Expand Alerts Over Time chart to match open ports width */
 #alerts-over-time-card {
-  margin-top: 126px;
   width: 92%;
 }
 
