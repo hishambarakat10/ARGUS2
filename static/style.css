@@ -415,7 +415,8 @@ body.dark .all-devices a {
 /* Shrink first small‑card (CPU) to its content */
 .left-column .card.small-card:first-child {
   align-self: flex-start;
-  width: 220px; /* You can tweak this value */
+  width: fit-content;
+  min-width: 200px;
 }
 
 /* Fix two-column alignment inside Open Ports card */
