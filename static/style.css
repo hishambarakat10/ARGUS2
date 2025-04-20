@@ -455,3 +455,8 @@ body.dark .all-devices a {
   gap: 24px;
   width: 100%;
 }
+
+/* Expand Alerts Over Time chart to match open ports width */
+#alerts-over-time-card {
+  width: 100%;
+}
