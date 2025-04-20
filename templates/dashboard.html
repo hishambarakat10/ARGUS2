@@ -1,394 +1,491 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Event Cards Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
-</head>
-<body>
-  <!-- Top Navigation Bar -->
-  <div class="topnav">
-    <a href="#" class="no-link">ARGUS</a>
-    <div class="topnav-right">
-      <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-      <a class="nav-link" href="{{ url_for('alerts') }}">Alerts</a>
-      <a class="nav-link logout-link" href="{{ url_for('logout') }}">Logout</a>
-      <button id="theme-toggle" class="theme-btn">🌙</button>
-    </div>
-  </div>
+:root {
+  --bg: #f8f9fa;
+  --text: #1f2937;
+  --card-bg: #ffffff;
+  --border: #ddd;
+  --accent: #007bff;
+  --scroll-thumb: #bbb;
+}
 
-  <!-- Dashboard Layout -->
-  <div class="dashboard-layout">
-    <div class="left-column">
-      <!-- Top Row Cards -->
-  <div class="top-cards">
-    <div class="card card1">
-      <div class="card-title">ALL<br>EVENTS</div>
-      <div class="card-number" id="event-count">Loading...</div>
-    </div>
-    <div class="card card4">
-      <div class="card-title">ALL<br>DEVICES</div>
-      <div class="card-number">4</div>
-      <div class="all-devices"><a href="alldevices.html">view all</a></div>
-    </div>
-    <div class="card card2">
-      <div class="card-title">WINDOW<br>EVENTS</div>
-      <div class="card-number">{{total_events}}</div>
-      <div class="all-window"><a href="allwindows.html">view all</a></div>
-    </div>
-  </div>
-      <div class="card small-card" id="virustotal-card">
-        <h3>VirusTotal IP Lookup</h3>
-        <input type="text" id="ipInput" placeholder="Enter IP address..." style="padding: 6px; width: 80%;">
-        <button onclick="lookupIP()">Lookup</button>
-        <div id="vt-result" style="margin-top: 10px; font-size: 14px;"></div>
-      </div>      
-      <!-- CPU Health Card -->
-      <div class="card small-card">
-        <div class="left-section">
-          <img src="{{ url_for('static', filename='cpu-health.png') }}" alt="CPU Icon" class="cpu-icon">
-          <h3>WINSPC-01</h3>
-          <span>CPU Health</span>
-        </div>
-        <div class="circle-wrap">
-          <svg width="100" height="100">
-            <circle class="circle-bg" cx="50" cy="50" r="44"/>
-            <circle class="circle-progress" cx="50" cy="50" r="44"/>
-          </svg>
-          <div class="circle-text">...</div>
-        </div>
-      </div>
-    
-      <!-- Full-width Alerts Over Time -->
-      <div class="card" id="alerts-over-time-card">
-        <h2>Alerts Over Time</h2>
-        <canvas id="lineChart" width="600" height="250"></canvas>
-      </div>
-    </div>
+body.dark {
+  --bg: #121212;
+  --text: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --border: #333;
+  --accent: #4dabf7;
+  --scroll-thumb: #666;
+}
 
-    <div class="center-column">
-      <!-- Open Ports -->
-      <div class="card small-card" id="open-ports-card">
-        <div class="row">
-          <div id="port-services" class="column"></div>
-          <div id="open-ports-box" class="column"></div>
-        </div>
-      </div>
-    
-    <!-- Pie Chart under CPU -->
-    <div class="card">
-      <h2>Severity Breakdown</h2>
-      <canvas id="pieChart" width="300" height="200"></canvas>
-    </div>
-  </div>
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+}
 
-    <div class="right-column">
-      <div class="card full-height wide-card">
-        <div class="alerts-header" style="display: flex; justify-content: space-between; align-items: center;">
-          <h1 class="dashboard-title">Recent Alerts</h1>
-          <button id="sortButton">Sort ↓</button>
-        </div>
-        <p class="last-updated">Last Updated Time: <span id="lastUpdatedTime"></span></p>
-        <div id="alerts" class="alerts-container"></div>
-      </div>
-    </div>
-  </div>
+/* Top Navigation Bar */
+.topnav {
+  background-color: #1f2937;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.topnav a {
+  color: white;
+  font-weight: bold;
+  margin-left: 15px;
+  text-decoration: none;
+}
+.theme-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: white;
+  margin-left: 10px;
+}
 
-  <!-- Chat UI -->
-  <button id="chat-button">💬</button>
-  <div id="chat-hint">💬 Need help?</div>
-  <div id="chat-window">
-    <div id="chat-header">ARGUS</div>
-    <div id="chat-subtitle">Please type your question below.</div>
-    <div id="chatbox"></div>
-    <div id="chat-input-container">
-      <input type="text" id="chatInput" placeholder="Type a message...">
-      <button id="sendBtn" onclick="sendMessage()">Send</button>
-    </div>
-  </div>
+/* Top Cards */
+.top-cards {
+  display: flex;
+  justify-content: flex-start;
+  gap: 60px;
+  padding: 20px 0 0 20px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+.top-cards .card {
+  flex: 0 0 auto;
+  min-width: 120px;
+  text-align: center;
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 15px 20px;
+}
+.card-title {
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.card-number {
+  font-size: 36px;
+  font-weight: 700;
+}
 
-  <!-- JavaScript -->
-  <script>
-    let lineChart, pieChart;
-    let sortDescending = true;
+/* Layout */
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1.5fr;
+  gap: 32px;
+  padding: 30px 40px;
+  width: 100%;
+  align-items: start;
+}
 
-    function getSeverityColor(classification) {
-      const lower = classification.toLowerCase();
-      return lower.includes("generic protocol command decode") ? "green" : "red";
-    }
+.left-column,
+.center-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.small-card {
+  padding: 15px;
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 25px 30px;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
 
-    function updateAlerts(logs) {
-      if (!Array.isArray(logs)) return;
-    
-      // Sort based on current state
-      logs.sort((a, b) => {
-        const dateA = new Date(a.timestamp);
-        const dateB = new Date(b.timestamp);
-        return sortDescending ? dateB - dateA : dateA - dateB;
-      });
-    
-      const alertsContainer = document.getElementById("alerts");
-      alertsContainer.innerHTML = "";
-    
-      logs.forEach(log => {
-        const severityColor = getSeverityColor(log.classification);
-        const alertHTML = `
-          <div class="alert-box">
-            <div class="alert-text">
-              <p class="alert-title">${log.classification}</p>
-              <p class="alert-time">${log.timestamp}</p>
-            </div>
-            <div class="alert-status" style="background-color: ${severityColor};"></div>
-          </div>
-        `;
-        alertsContainer.innerHTML += alertHTML;
-      });
-    
-      document.getElementById("lastUpdatedTime").textContent = new Date().toLocaleString();
-      document.getElementById("sortButton").addEventListener("click", () => {
-        sortDescending = !sortDescending;
-        document.getElementById("sortButton").textContent = sortDescending ? "Sort ↓" : "Sort ↑";
-        fetchLogs(); // re-fetch and re-render alerts
-      });
-    }    
+/* CPU Health Circle */
+.circle-wrap {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+.circle-bg,
+.circle-progress {
+  fill: none;
+  stroke-width: 8;
+}
+.circle-bg {
+  stroke: #eee;
+}
+.circle-progress {
+  stroke: var(--accent);
+  stroke-dasharray: 276;
+  stroke-dashoffset: 276;
+  transition: stroke-dashoffset 0.5s ease;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+.circle-text {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  font-weight: bold;
+}
 
-    function updateLineChart() {
-      fetch('/api/alerts-over-time')
-        .then(response => response.json())
-        .then(data => {
-          const ctx = document.getElementById('lineChart').getContext('2d');
-          if (lineChart) lineChart.destroy();
-          lineChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: data.timestamps,
-              datasets: [{
-                label: "Alerts Over Time",
-                data: data.alerts,
-                borderColor: 'red',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                tension: 0.1
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: { title: { display: true, text: 'Time' }, ticks: { autoSkip: true, maxTicksLimit: 8 } },
-                y: {
-                  beginAtZero: true,
-                  title: { display: true, text: 'Alerts' },
-                  ticks: { stepSize: 1, precision: 0 }
-                }
-              }
-            }
-          });
-        });
-    }
+/* Alerts Section */
+.dashboard-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.alerts-container {
+  flex: 1;
+  margin-top: 12px;
+  overflow-y: auto;
+}
+.alerts-container::-webkit-scrollbar {
+  width: 6px;
+}
+.alerts-container::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb);
+  border-radius: 4px;
+}
+.alert-box {
+  background-color: var(--card-bg);
+  color: var(--text);
+  border-left: 6px solid var(--accent);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 30px;
+}
+.alert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.alert-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.alert-time {
+  font-size: 13px;
+  margin: 0;
+  color: var(--text);
+}
+.alert-status {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-left: 20px;
+}
+.right-column .card.full-height {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+.right-column .wide-card {
+  height: 100%;
+}
 
-    function updatePieChart() {
-      fetch('/api/severity-breakdown')
-        .then(response => response.json())
-        .then(data => {
-          const ctx = document.getElementById('pieChart').getContext('2d');
-          if (pieChart) pieChart.destroy();
-          pieChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-              labels: data.labels,
-              datasets: [{
-                data: data.percentages,
-                backgroundColor: ['#FF5733','#33FF57','#3357FF','#FF33A6','#33FFF5'],
-                borderColor: '#fff',
-                borderWidth: 1
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { position: 'bottom' } }
-            }
-          });
-        });
-    }
+/* Chat Widget */
+#chat-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+#chat-window {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  bottom: 100px;
+  right: 24px;
+  width: 320px;
+  max-height: 500px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  z-index: 999;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+#chat-header {
+  background: linear-gradient(to right, #9b2cff, #ff2cb4);
+  color: white;
+  font-weight: bold;
+  padding: 16px;
+  text-align: center;
+  font-size: 16px;
+}
+#chat-subtitle {
+  font-size: 14px;
+  padding: 10px 16px;
+  color: #444;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #eee;
+}
+#chat-hint {
+  position: fixed;
+  bottom: 90px;
+  right: 90px;
+  background: var(--accent);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 14px;
+  z-index: 999;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+#chat-hint.show {
+  opacity: 1;
+}
+#chat-window.open {
+  display: flex;
+}
+#chat-input-container {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #eee;
+  background-color: #fff;
+}
+#chatbox {
+  flex-grow: 1;
+  padding: 12px;
+  overflow-y: auto;
+  background: #fafafa;
+}
+#chatbox div {
+  margin-bottom: 10px;
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+#chatbox .user {
+  background-color: #007bff;
+  color: white;
+  align-self: flex-end;
+  margin-left: auto;
+}
+#chatbox .bot {
+  background-color: #e6e6e6;
+  color: #333;
+  align-self: flex-start;
+  margin-right: auto;
+}
+#chatInput {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  outline: none;
+  font-size: 14px;
+}
+#sendBtn {
+  background: linear-gradient(to right, #9b2cff, #ff2cb4);
+  border: none;
+  padding: 10px 16px;
+  color: white;
+  margin-left: 10px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+#sendBtn:hover {
+  opacity: 0.9;
+}
 
-    function updateOpenPorts() {
-      const portMap = {
-        21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP",
-        53: "DNS", 80: "HTTP", 110: "POP3", 139: "NetBIOS",
-        143: "IMAP", 443: "HTTPS", 3306: "MySQL",
-        3389: "RDP", 8080: "HTTP-ALT"
-      };
+/* Buttons */
+button {
+  padding: 6px 10px;
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #0056b3;
+}
 
-      fetch('/api/ports')
-        .then(res => res.json())
-        .then(data => {
-          if (!Array.isArray(data)) return;
-          const servicesBox = document.getElementById("port-services");
-          const portsBox    = document.getElementById("open-ports-box");
+/* Dark mode card text */
+body.dark .card-title,
+body.dark .card-number,
+body.dark .dashboard-title {
+  color: #fff;
+}
+body.dark .card,
+body.dark .top-cards .card {
+  background-color: var(--card-bg);
+  color: var(--text);
+  box-shadow: 0 4px 10px rgba(255,255,255,0.05);
+}
+body.dark .all-window a,
+body.dark .all-devices a {
+  color: white;
+}
 
-          servicesBox.innerHTML = `
-            <h3>WINSPC-01</h3>
-            <div class="service-list"></div>
-          `;
-          portsBox.innerHTML = `
-            <h3>OPEN PORTS</h3>
-            <div class="port-list"></div>
-          `;
+/* Charts sizing */
+#lineChart,
+#pieChart {
+  max-width: 100%;
+  max-height: 250px;
+  height: 250px;
+}
+.center-column .card {
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 
-          const svcList  = servicesBox.querySelector('.service-list');
-          const portList = portsBox.querySelector('.port-list');
+/* ────────────────────────────────────────────────
+   NEW: Open‑Ports card two‑column layout
+───────────────────────────────────────────────── */
+.center-column .card.small-card {
+  display: flex;
+  gap: 40px;
+}
+#port-services,
+#open-ports-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#port-services h3,
+#open-ports-box h3 {
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 14px;
+}
+.service-list,
+.port-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.service-list span,
+.port-list span {
+  padding: 2px 0;
+}
 
-          data.forEach(port => {
-            const service = portMap[parseInt(port,10)] || "Unknown";
-            svcList.innerHTML  += `<span>${service}</span>`;
-            portList.innerHTML += `<span>Port ${port}</span>`;
-          });
-        })
-        .catch(err => console.error("Error fetching open ports:", err));
-    }
+/* Pin Recent Alerts under the navbar */
+.right-column {
+  align-self: stretch;
+}
+.right-column .card.full-height.wide-card {
+  margin-top: 15px;
+  max-height: 1000px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: 430px; /* adjust this value to desired size */
+  margin-left: -10px; /* push it left if needed */
+}
+/* Shrink first small‑card (CPU) to its content */
+.left-column .card.small-card:first-child {
+  align-self: flex-start;
+  width: fit-content;
+  min-width: 200px;
+}
 
-    function fetchLogs() {
-      fetch('/api/logs')
-        .then(res => res.json())
-        .then(updateAlerts)
-        .catch(console.error);
-    }
+/* Fix two-column alignment inside Open Ports card */
+.center-column .card.small-card .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  width: 100%;
+}
 
-    function sendMessage() {
-      const input = document.getElementById("chatInput");
-      const msg   = input.value.trim();
-      if (!msg) return;
-      const chatbox = document.getElementById("chatbox");
-      chatbox.innerHTML += `<div class="user">${msg}</div>`;
-      input.value = "";
-      fetch('/api/chat', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({message: msg})
-      })
-      .then(r=>r.json())
-      .then(d=> {
-        chatbox.innerHTML += `<div class="bot">${d.response}</div>`;
-        chatbox.scrollTop = chatbox.scrollHeight;
-      })
-      .catch(e=> chatbox.innerHTML += `<div><strong>Error:</strong> ${e}</div>`);
-    }
+.center-column .card.small-card .column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
 
-    function updateEventCount() {
-      fetch('/api/event-count')
-        .then(r=>r.json())
-        .then(d=> document.getElementById("event-count").textContent = d.count)
-        .catch(console.error);
-    }
+/* Align Open Ports card with bottom of CPU Health box */
+.center-column .card.small-card {
+  margin-top: 92px; /* Adjust this number if needed */
+  height: fit-content;
+}
 
-    function updateCPUHealth() {
-      fetch('/api/cpu')
-        .then(r=>r.json())
-        .then(d=>{
-          const usage = Math.round(d.cpu);
-          document.querySelector(".circle-text").textContent = `${usage}%`;
-          const maxOffset = 276;
-          document.querySelector(".circle-progress")
-            .style.strokeDashoffset = maxOffset - (maxOffset * usage)/100;
-        })
-        .catch(console.error);
-    }
+/* Open Ports Card - push it up below top cards */
+#open-ports-card {
+  margin-top: 20px;
+}
 
-    const socket = io({ transports:['websocket'] });
-    socket.on("connect",()=>console.log("✅ Socket connected"));
-    socket.on("update_charts",()=>{
-      updateLineChart(); updatePieChart();
-      fetchLogs(); updateOpenPorts();
-    });
+/* Remove extra spacing in center column */
+.center-column {
+  gap: 20px;
+}
 
-    updateLineChart();
-    updatePieChart();
-    fetchLogs();
-    updateOpenPorts();
-    updateEventCount();
-    updateCPUHealth();
-    setInterval(fetchLogs, 5000);
-    setInterval(updateOpenPorts, 5000);
-    setInterval(updateEventCount, 5000);
-    setInterval(updateCPUHealth, 5000);
+/* Make sure the row with pie + alerts chart is full width */
+.center-column .row {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+}
 
-    document.addEventListener('DOMContentLoaded',()=>{
-      if(localStorage.getItem('theme')==='dark'){
-        document.body.classList.add('dark');
-        document.getElementById('theme-toggle').textContent='🌞';
-      }
-    });
-    document.getElementById('theme-toggle')
-      .addEventListener('click',()=>{
-        const dark = document.body.classList.toggle('dark');
-        localStorage.setItem('theme', dark?'dark':'light');
-        document.getElementById('theme-toggle').textContent = dark?'🌞':'🌙';
-      });
+/* Expand Alerts Over Time chart to match open ports width */
+#alerts-over-time-card {
+  width: 210%;
+}
 
-    document.getElementById("chat-button")
-      .addEventListener("click",()=> document.getElementById("chat-window").classList.toggle("open"));
-    window.addEventListener("load",()=>{
-      const hint = document.getElementById("chat-hint");
-      const win  = document.getElementById("chat-window");
-      hint.classList.add("show");
-      hint.addEventListener("click",()=>{
-        win.classList.add("open");
-        hint.classList.remove("show");
-      });
-      setTimeout(()=> hint.classList.remove("show"),7000);
-    });
-    document.getElementById("chatInput")
-      .addEventListener("keypress",e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMessage(); } });
+#sortButton {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+#sortButton:hover {
+  background-color: #0056b3;
+}
 
-    function updateWindowsLogCount() {
-      fetch('/api/windows_log_count')
-        .then(r=>r.json())
-        .then(d=> document.querySelector('.card2 .card-number').textContent = d.count)
-        .catch(console.error);
-    }
-    updateWindowsLogCount();
-    setInterval(updateWindowsLogCount, 5000);
+#virustotal-card input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 6px;
+}
 
-    function lookupIP() {
-      const ip = document.getElementById("ipInput").value;
-      const resultBox = document.getElementById("vt-result");
-      if (!ip) {
-        resultBox.innerHTML = "Please enter an IP.";
-        return;
-      }
-    
-      resultBox.innerHTML = "Looking up...";
-      fetch("/api/virustotal/ip", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ip: ip })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          resultBox.innerHTML = `<span style="color:red;">Error: ${data.error}</span>`;
-        } else {
-          const stats = data.data.attributes.last_analysis_stats;
-          resultBox.innerHTML = `
-            Harmless: ${stats.harmless}<br>
-            Malicious: ${stats.malicious}<br>
-            Suspicious: ${stats.suspicious}<br>
-            Undetected: ${stats.undetected}
-          `;
-        }
-      })
-      .catch(err => {
-        resultBox.innerHTML = `<span style="color:red;">Failed to get report.</span>`;
-        console.error(err);
-      });
-    }    
-  </script>
-</body>
-</html>
+.cpu-icon {
+  width: 50px;
+  height: 50px;
+  margin-left: 20px;
+}
