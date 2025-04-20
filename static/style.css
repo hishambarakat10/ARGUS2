@@ -411,7 +411,7 @@ body.dark .all-devices a {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-width: 400px; /* adjust this value to desired size */
+  max-width: 420px; /* adjust this value to desired size */
   margin-left: -10px; /* push it left if needed */
 }
 /* Shrink first small‑card (CPU) to its content */
