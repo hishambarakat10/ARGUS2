@@ -487,6 +487,6 @@ body.dark .all-devices a {
 .cpu-icon {
   width: 150px;
   height: 150px;
-  margin-left: 200px;
+  margin-left: 100px;
   margin-top: 40px; /* Adjust to move the image down */
 }
