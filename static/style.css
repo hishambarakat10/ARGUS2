@@ -374,7 +374,6 @@ body.dark .all-devices a {
 }
 #port-services,
 #open-ports-box {
-  margin-top: 100px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -382,6 +381,7 @@ body.dark .all-devices a {
 }
 #port-services h3,
 #open-ports-box h3 {
+  margin-top: 100px;
   margin: 0;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
