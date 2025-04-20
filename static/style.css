@@ -433,3 +433,9 @@ body.dark .all-devices a {
   flex-direction: column;
   justify-content: flex-start;
 }
+
+/* Align Open Ports card with bottom of CPU Health box */
+.center-column .card.small-card {
+  margin-top: 92px; /* Adjust this number if needed */
+  height: fit-content;
+}
