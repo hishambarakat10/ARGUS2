@@ -234,7 +234,7 @@ def virustotal_ip_lookup():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/challenge', methods=['GET', 'POST'])
+@app.route('/ctf', methods=['GET', 'POST'])
 def sql_vulnerable_login():
     """Handles the SQL vulnerable login form."""
     if request.method == 'POST':
