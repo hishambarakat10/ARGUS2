@@ -98,7 +98,7 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http://192.168.1.216:5005/chat"  # Replace with your actual host IP
+    host_chatbot_url = "http://192.168.1.1:5005/chat"  # Replace with your actual host IP
 
     try:
         response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=150)
@@ -233,6 +233,42 @@ def virustotal_ip_lookup():
         return jsonify(vt_data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/challenge', methods=['GET', 'POST'])
+def sql_vulnerable_login():
+    """Handles the SQL vulnerable login form."""
+    if request.method == 'POST':
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+
+        # Make it harder: Replace double quotes with single quotes (encourages quote juggling)
+        username = username.replace('"', "'")
+        password = password.replace('"', "'")
+
+        # Establish connection to DB
+        conn = sqlite3.connect("ctf.db")
+        cursor = conn.cursor()
+
+        try:
+            # Harder cause was too ezz
+            query = f"""
+                SELECT * FROM users 
+                WHERE username LIKE '%{username}%' 
+                AND password LIKE '%{password}%'
+            """
+            cursor.execute(query)
+            user = cursor.fetchone()
+        except sqlite3.OperationalError:
+            user = None
+        finally:
+            conn.close()
+
+        if user:
+            return render_template('ctf.html', message=f"Login Successful! Welcome, $25 Amazon GiftCard == [hiwdhdiuwhidwuiwhfiff]| {username}")
+        else:
+            return render_template('ctf.html', message="Invalid Credentials.")
+
+    return render_template('ctf.html', message="")
 
 # ============================
 # BACKGROUND LOG MONITORING
