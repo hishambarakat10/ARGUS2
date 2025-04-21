@@ -98,7 +98,7 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http://10.152.48.108:5005/chat"  # Replace with your actual host IP
+    host_chatbot_url = "http://192.168.1.1:5005/chat"  # Replace with your actual host IP
 
     try:
         response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=150)
@@ -264,7 +264,7 @@ def sql_vulnerable_login():
             conn.close()
 
         if user:
-            return render_template('ctf.html', message=f"Login Successful! Welcome, $25 Amazon GiftCard == [hiwdhdiuwhidwuiwhfiff]| {username}")
+            return render_template('ctf.html', message=f"Login Successful! Welcome, Amazon Claim $25 == Code.2HHH-VSV9MZ-B2AR | {username}")
         else:
             return render_template('ctf.html', message="Invalid Credentials.")
 
