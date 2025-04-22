@@ -58,12 +58,12 @@ def send_email_alert(log_data):
     content = f"""
     A new log was received on the dashboard, please interact with the chatbot for further details.
 
-    Time: {log_data['timestamp']}
-    Details: {log_data['details']}
-    Classification: {log_data['classification']}
-    Source IP: {log_data['src_ip']}
-    Destination IP: {log_data['dest_ip']}
-    Device: {log_data['device_name']}
+    Time: {log_data['timestamp', 'N/A']}
+    Details: {log_data['details', 'N/A']}
+    Classification: {log_data['classification', 'N/A']}
+    Source IP: {log_data['src_ip', 'N/A']}
+    Destination IP: {log_data['dest_ip', 'N/A']}
+    Device: {log_data['device_name', 'N/A']}
     """
     msg.set_content(content)
 
