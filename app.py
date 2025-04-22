@@ -176,7 +176,7 @@ def get_logs():
 
 def send_logs():
     """Returns all stored logs as JSON."""
-    return jsonify(logs)
+    return jsonify(log_data)
 
 @app.route("/api/fast-log", methods=["GET"])
 def get_fast_log():
