@@ -20,7 +20,7 @@ def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
         lines = f.readlines()[-count:]
         for line in lines:
             entry = parse_fast_log(line)
-            if entry:
+            if entry and entry["classification"] != "Generic Protocol Command Decode":
                 log_data.append(entry)
                 classification = entry["classification"]
                 classification_counts[classification] = classification_counts.get(classification, 0) + 1
@@ -185,8 +185,9 @@ def get_fast_log():
 @app.route("/api/alerts-over-time")
 def alerts_over_time():
     minute_timestamps = []
-
     for entry in log_data:
+        if entry["classification"] == "Generic Protocol Command Decode":
+            continue
         try:
             ts = datetime.strptime(entry["timestamp"], "%m/%d/%Y-%H:%M:%S.%f")
             minute_str = ts.strftime("%Y-%m-%d %H:%M")
@@ -205,9 +206,13 @@ def alerts_over_time():
 
 @app.route("/api/severity-breakdown")
 def severity_breakdown():
+    filtered_counts = {
+        k: v for k, v in classification_counts.items()
+        if k != "Generic Protocol Command Decode"
+    }
     return jsonify({
-        "labels": list(classification_counts.keys()),
-        "percentages": list(classification_counts.values())
+        "labels": list(filtered_counts.keys()),
+        "percentages": list(filtered_counts.values())
     })
 
 @app.route('/api/ports', methods=['GET', 'POST'])
@@ -341,8 +346,10 @@ def sql_vulnerable_login():
 # ============================
 
 def process_log_entry(log_entry):
-    timestamp = log_entry["timestamp"]
     classification = log_entry["classification"]
+    if classification == "Generic Protocol Command Decode":
+        return  # Skip this log
+    timestamp = log_entry["timestamp"]
     classification_counts[classification] = classification_counts.get(classification, 0) + 1
     log_data.append(log_entry)
 
