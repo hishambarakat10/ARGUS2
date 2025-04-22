@@ -296,10 +296,10 @@ def virustotal_ip_lookup():
 @app.route('/ctf', methods=['GET', 'POST'])
 def sql_vulnerable_login():
     if request.method == 'POST':
-
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
 
+        # Light sanitization (doesn't protect against SQLi)
         username = username.replace('"', "'")
         password = password.replace('"', "'")
 
@@ -310,20 +310,25 @@ def sql_vulnerable_login():
             conn = sqlite3.connect("ctf.db")
             cursor = conn.cursor()
 
-            # DEBUGGIN
             cursor.execute("SELECT * FROM users")
             print("All users in DB:", cursor.fetchall())
 
-            # 
             query = f"""
-                SELECT * FROM users 
-                WHERE username LIKE '%{username}%' 
-                AND (password LIKE CONCAT('%', '{password}', '%') OR '{password}' = 'supersecure')
-                AND username COLLATE BINARY = '{username}'
+                SELECT * FROM users
+                WHERE username LIKE ('%'  '{username}'  '%')
+                AND password GLOB '{password}'
+                AND 1 = (
+                    SELECT CASE
+                        WHEN (SELECT COUNT(*) FROM users WHERE username = '{username}') > 0
+                        THEN 1 ELSE 0 END
+                )
+                -- fake filter beloew to confuse payloads
+                AND NOT EXISTS (
+                    SELECT 1 FROM users WHERE username = 'blocked_user'
+                )
             """
 
             print("Executing query:", query)
-
             cursor.execute(query)
             user = cursor.fetchone()
 
@@ -333,7 +338,6 @@ def sql_vulnerable_login():
         finally:
             conn.close()
 
-        # Return response based on success or failure
         if user:
             return render_template('ctf.html', message=f"Login Successful! Welcome, {username}")
         else:
