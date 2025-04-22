@@ -231,7 +231,7 @@ body {
   font-family: 'Inter', sans-serif;
 }
 #chat-header {
-  background: linear-gradient(to right, #9b2cff, #ff2cb4);
+  background: linear-gradient(to right, #081340, #081340);
   color: white;
   font-weight: bold;
   padding: 16px;
