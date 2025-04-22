@@ -129,8 +129,10 @@
       const alertsContainer = document.getElementById("alerts");
       alertsContainer.innerHTML = "";
     
-      logs.forEach(log => {
-        const severityColor = getSeverityColor(log.classification);
+      logs
+        .filter(log => log.classification !== "Generic Protocol Command Decode")
+        .forEach(log => {
+    const severityColor = getSeverityColor(log.classification);
         const alertHTML = `
           <div class="alert-box">
             <div class="alert-text">
