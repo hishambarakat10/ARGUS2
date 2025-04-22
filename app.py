@@ -132,7 +132,7 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http://192.168.1.1:5005/chat"  # Replace with your actual host IP
+    host_chatbot_url = "http://10.152.48.108:5005/chat"  # Replace with your actual host IP
 
     try:
         response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=150)
