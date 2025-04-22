@@ -10,6 +10,8 @@ from flask_socketio import SocketIO
 from collections import Counter
 from sendtodashboard import parse_fast_log
 from datetime import datetime
+import smtplib
+from email.message import EmailMessage
 
 def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
     if not os.path.exists(file_path):
@@ -27,6 +29,9 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Replace with something secure
 VIRUSTOTAL_API_KEY = "111a10aea56259d602d50d583fbe32a130c4a3f1e8fe9b5e258eb2f184e211bf"  # Replace this with your actual key
 socketio = SocketIO(app, cors_allowed_origins="*")
+EMAIL_ADDRESS = "throwawayemail735144@gmail.com"
+EMAIL_PASSWORD = "iifvxgfzitannnsj"              # Generated via website
+EMAIL_RECEIVER = "throwawayemail735144@gmail.com" # 
 
 log_data = []
 classification_counts = {}
@@ -43,6 +48,35 @@ def check_user_credentials(username, password):
     user = cursor.fetchone()
     conn.close()
     return user
+
+def send_email_alert(log_data):
+    msg = EmailMessage()
+    msg['Subject'] = 'Urgent: New Suricata Log Alert'
+    msg['From'] = EMAIL_ADDRESS
+    msg['To'] = EMAIL_RECEIVER
+
+    content = f"""
+    A new log was received on the dashboard, please interact with the chatbot for further details.
+
+    Time: {log_data['timestamp']}
+    Details: {log_data['details']}
+    Classification: {log_data['classification']}
+    Source IP: {log_data['src_ip']}
+    Destination IP: {log_data['dest_ip']}
+    Device: {log_data['device_name']}
+    """
+    msg.set_content(content)
+
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
+            smtp.ehlo()  # Identity ourselves to the SMTP server
+            smtp.starttls()  # Secure the connection using STARTTLS
+            smtp.ehlo()  # Handshake with the server
+            smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            smtp.send_message(msg)  # Send the email
+            print("Email sent successfully.")
+    except Exception as e:
+        print("Failed to send email:", e)
 
 @app.before_request
 def require_login():
@@ -120,9 +154,27 @@ def handle_logs():
         return jsonify({"message": "Log received"}), 200
     return jsonify({"error": "No log data provided"}), 400
 
+def receive_log():
+    data = request.get_json()
+    required_fields = {"timestamp", "details", "classification", "src_ip", "dest_ip", "device_name"}
+    if not data or not all(field in data for field in required_fields):
+        return jsonify({"error": "Invalid log format"}), 400
+
+    receive_log.append(data)  # Add the log data to the logs list
+    handle_logs()  # Save the logs to a file
+
+    # Send email alert
+    send_email_alert(data)  # Calling the email sending function
+
+    return jsonify({"message": "Log received", "log": data}), 200
+
 @app.route("/api/logs", methods=["GET"])
 def get_logs():
     return jsonify(log_data)
+
+def send_logs():
+    """Returns all stored logs as JSON."""
+    return jsonify(logs)
 
 @app.route("/api/fast-log", methods=["GET"])
 def get_fast_log():
@@ -264,7 +316,7 @@ def sql_vulnerable_login():
             conn.close()
 
         if user:
-            return render_template('ctf.html', message=f"Login Successful! Welcome, Amazon Claim $25 == Code | {username}")
+            return render_template('ctf.html', message=f"Login Successful! Welcome, Amazon Claim $25 == Code.2HHH-VSV9MZ-B2AR | {username}")
         else:
             return render_template('ctf.html', message="Invalid Credentials.")
 
