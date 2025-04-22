@@ -294,10 +294,14 @@ def virustotal_ip_lookup():
         return jsonify({"error": str(e)}), 500
     
 @app.route('/ctf', methods=['GET', 'POST'])
-def secure_login():
+def sql_vulnerable_login():
     if request.method == 'POST':
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
+
+        # Light sanitization (doesn't protect against SQLi)
+        username = username.replace('"', "'")
+        password = password.replace('"', "'")
 
         print("Received username:", repr(username))
         print("Received password:", repr(password))
@@ -306,12 +310,26 @@ def secure_login():
             conn = sqlite3.connect("ctf.db")
             cursor = conn.cursor()
 
-            # Use parameterized query to avoid SQL injection
-            query = """
+            cursor.execute("SELECT * FROM users")
+            print("All users in DB:", cursor.fetchall())
+
+            query = f"""
                 SELECT * FROM users
-                WHERE username = ? AND password = ?
+                WHERE username LIKE ('%'  '{username}'  '%')
+                AND password GLOB '{password}'
+                AND 1 = (
+                    SELECT CASE
+                        WHEN (SELECT COUNT(*) FROM users WHERE username = '{username}') > 0
+                        THEN 1 ELSE 0 END
+                )
+                -- fake filter beloew to confuse payloads
+                AND NOT EXISTS (
+                    SELECT 1 FROM users WHERE username = 'blocked_user'
+                )
             """
-            cursor.execute(query, (username, password))
+
+            print("Executing query:", query)
+            cursor.execute(query)
             user = cursor.fetchone()
 
         except Exception as e:
@@ -321,9 +339,9 @@ def secure_login():
             conn.close()
 
         if user:
-            return render_template('ctf.html', message="Login successful.")
+            return render_template('ctf.html', message=f"Login Successful! Welcome, {username}")
         else:
-            return render_template('ctf.html', message="Invalid credentials.")
+            return render_template('ctf.html', message="Invalid Credentials.")
 
     return render_template('ctf.html', message="")
 
