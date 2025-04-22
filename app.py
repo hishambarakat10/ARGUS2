@@ -299,7 +299,7 @@ def sql_vulnerable_login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
 
-        # Light sanitization (doesn't protect against SQLi)
+        # Still weak sanitization
         username = username.replace('"', "'")
         password = password.replace('"', "'")
 
@@ -313,19 +313,21 @@ def sql_vulnerable_login():
             cursor.execute("SELECT * FROM users")
             print("All users in DB:", cursor.fetchall())
 
+            # Moderately hard injection point
             query = f"""
                 SELECT * FROM users
-                WHERE username LIKE ('%'  '{username}'  '%')
-                AND password GLOB '{password}'
+                WHERE username = (
+                    SELECT username FROM users
+                    WHERE username = '{username}'
+                    LIMIT 1
+                )
+                AND password = '{password}'
                 AND 1 = (
                     SELECT CASE
-                        WHEN (SELECT COUNT(*) FROM users WHERE username = '{username}') > 0
+                        WHEN (SELECT COUNT(*) FROM users WHERE password = '{password}') >= 1
                         THEN 1 ELSE 0 END
                 )
-                -- fake filter beloew to confuse payloads
-                AND NOT EXISTS (
-                    SELECT 1 FROM users WHERE username = 'blocked_user'
-                )
+                HAVING 1=1 -- misleading clause to trip up logic-based filters
             """
 
             print("Executing query:", query)
@@ -344,6 +346,7 @@ def sql_vulnerable_login():
             return render_template('ctf.html', message="Invalid Credentials.")
 
     return render_template('ctf.html', message="")
+
 
 # ============================
 # BACKGROUND LOG MONITORING
