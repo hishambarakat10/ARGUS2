@@ -346,5 +346,4 @@ def process_log_entry(log_entry):
 
 if __name__ == "__main__":
     load_initial_logs()
-    app.run(debug=True)
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
