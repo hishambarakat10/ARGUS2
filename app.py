@@ -150,6 +150,8 @@ def handle_logs():
     log_entry = request.get_json()
     if log_entry:
         process_log_entry(log_entry)
+        print("Sending email for log:", log_entry)
+        send_email_alert(log_entry)
         socketio.emit("update_charts", to='*')
         return jsonify({"message": "Log received"}), 200
     return jsonify({"error": "No log data provided"}), 400
@@ -346,4 +348,5 @@ def process_log_entry(log_entry):
 
 if __name__ == "__main__":
     load_initial_logs()
+    app.run(debug=True)
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
