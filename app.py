@@ -324,7 +324,7 @@ def sql_vulnerable_login():
                 )
                 -- fake filter beloew to confuse payloads
                 AND NOT EXISTS (
-                    SELECT 1 FROM users WHERE username = 'blocked_user'
+                    SELECT 1 FROM users WHERE username = 'admin'
                 )
             """
 
