@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SQL Injection CTF</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles3.css') }}">
+    <link rel="stylesheet" href="{{ urlfor('static', filename='styles3.css') }}">
 </head>
 <body>
     <div class="ctf-container">
         <h1>SQL Injection Challenge</h1>
-        <p>Can you bypass the login?</p>
+        <p>--</p>
 
         <form method="POST" action="/ctf">
             <input type="text" name="username" placeholder="Enter Username" required>
@@ -18,8 +18,15 @@
         </form>
 
         <div class="hint">
-            <p>Hint: Try something unexpected</p>
+            <p>Looks like the admins password wasnt SUPERSECURE</p>
         </div>
+
+        <!-- Displaying the message -->
+        {% if message %}
+            <div class="message">
+                <p>{{ message }}</p>
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>
