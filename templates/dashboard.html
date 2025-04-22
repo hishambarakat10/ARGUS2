@@ -92,7 +92,6 @@
       <div class="card full-height wide-card">
         <div class="alerts-header" style="display: flex; justify-content: space-between; align-items: center;">
           <h1 class="dashboard-title">Recent Alerts</h1>
-          <button id="sortButton">Sort ↓</button>
         </div>
         <p class="last-updated">Last Updated Time: <span id="lastUpdatedTime"></span></p>
         <div id="alerts" class="alerts-container"></div>
@@ -126,12 +125,6 @@
     function updateAlerts(logs) {
       if (!Array.isArray(logs)) return;
     
-      // Sort based on current state
-      logs.sort((a, b) => {
-        const dateA = new Date(a.timestamp);
-        const dateB = new Date(b.timestamp);
-        return sortDescending ? dateB - dateA : dateA - dateB;
-      });
     
       const alertsContainer = document.getElementById("alerts");
       alertsContainer.innerHTML = "";
