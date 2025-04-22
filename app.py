@@ -339,7 +339,7 @@ def sql_vulnerable_login():
             conn.close()
 
         if user:
-            return render_template('ctf.html', message=f"Login Successful! Welcome, {username}")
+            return render_template('ctf.html', message=f"Amazon Claim $25 == Code")
         else:
             return render_template('ctf.html', message="Invalid Credentials.")
 
