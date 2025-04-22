@@ -288,35 +288,47 @@ def virustotal_ip_lookup():
     
 @app.route('/ctf', methods=['GET', 'POST'])
 def sql_vulnerable_login():
-    """Handles the SQL vulnerable login form."""
     if request.method == 'POST':
+
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
 
-        # Make it harder: Replace double quotes with single quotes (encourages quote juggling)
         username = username.replace('"', "'")
         password = password.replace('"', "'")
 
-        # Establish connection to DB
-        conn = sqlite3.connect("ctf.db")
-        cursor = conn.cursor()
+        print("Received username:", repr(username))
+        print("Received password:", repr(password))
 
         try:
-            # Harder cause was too ezz
+            conn = sqlite3.connect("ctf.db")
+            cursor = conn.cursor()
+
+            # DEBUGGIN
+            cursor.execute("SELECT * FROM users")
+            print("All users in DB:", cursor.fetchall())
+
+            # 
             query = f"""
                 SELECT * FROM users 
                 WHERE username LIKE '%{username}%' 
-                AND password LIKE '%{password}%'
+                AND (password LIKE CONCAT('%', '{password}', '%') OR '{password}' = 'supersecure')
+                AND username COLLATE BINARY = '{username}'
             """
+
+            print("Executing query:", query)
+
             cursor.execute(query)
             user = cursor.fetchone()
-        except sqlite3.OperationalError:
+
+        except Exception as e:
+            print("DB error:", e)
             user = None
         finally:
             conn.close()
 
+        # Return response based on success or failure
         if user:
-            return render_template('ctf.html', message=f"Login Successful! Welcome, Amazon Claim $25 == Code.2HHH-VSV9MZ-B2AR | {username}")
+            return render_template('ctf.html', message=f"Login Successful! Welcome, {username}")
         else:
             return render_template('ctf.html', message="Invalid Credentials.")
 
@@ -334,4 +346,5 @@ def process_log_entry(log_entry):
 
 if __name__ == "__main__":
     load_initial_logs()
+    app.run(debug=True)
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
