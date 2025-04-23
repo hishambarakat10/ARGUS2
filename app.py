@@ -388,6 +388,8 @@ def receive_windows_health():
     except (FileNotFoundError, json.JSONDecodeError):
         devices = []
 
+    # Remove existing entry with same device_name
+    devices = [d for d in devices if d.get("device_name") != data.get("device_name")]
     devices.append(data)
 
     with open("windows_health.json", "w") as f:
