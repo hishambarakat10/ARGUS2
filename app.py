@@ -362,15 +362,6 @@ def api_windows_health():
         json.dump(data, f, indent=2)
     return jsonify({"message": "Windows health data received"}), 200
 
-@app.route('/api/windows-events', methods=['POST'])
-def api_windows_events():
-    data = request.get_json()
-    if not isinstance(data, list):
-        return jsonify({"error": "Invalid data format"}), 400
-    with open("windows_events.json", "w") as f:
-        json.dump(data, f, indent=2)
-    return jsonify({"message": "Windows event logs received"}), 200
-
 # Start the background thread for collecting metrics
 threading.Thread(target=collect_windows_metrics, daemon=True).start()
 
