@@ -83,7 +83,7 @@ def send_email_alert(log_data):
 def require_login():
     allowed_routes = ['login', 'static', 'handle_logs', 'get_logs', 'chat_with_langchain_bot', 
                       'alerts_over_time', 'severity_breakdown', 'get_fast_log', 
-                      'receive_ports', 'receive_cpu_usage', 'get_cpu_usage']
+                      'receive_ports', 'receive_cpu_usage', 'get_cpu_usage', 'receive_windows_health']
     if request.endpoint not in allowed_routes and 'logged_in' not in session:
         return redirect(url_for('login'))
 
