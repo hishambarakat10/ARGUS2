@@ -354,27 +354,37 @@ def sql_vulnerable_login():
 # NEW WINDOWS LOG APIs
 # ============================
 
-@app.route('/api/windows_logs', methods=['POST'])
+@app.route('/api/windows_logs', methods=['GET', 'POST'])
 def receive_windows_logs():
-    try:
-        data = request.get_json()
-        if not isinstance(data, list):
-            return jsonify({"error": "Expected a list of event logs"}), 400
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not isinstance(data, list):
+                return jsonify({"error": "Expected a list of event logs"}), 400
 
+            try:
+                with open("windows_events.json", "r") as f:
+                    existing_logs = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                existing_logs = []
+
+            existing_logs.extend(data)
+
+            with open("windows_events.json", "w") as f:
+                json.dump(existing_logs, f, indent=2)
+
+            return jsonify({"message": "Windows events stored"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    # GET request returns count
+    elif request.method == 'GET':
         try:
             with open("windows_events.json", "r") as f:
-                existing_logs = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            existing_logs = []
-
-        existing_logs.extend(data)
-
-        with open("windows_events.json", "w") as f:
-            json.dump(existing_logs, f, indent=2)
-
-        return jsonify({"message": "Windows events stored"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+                logs = json.load(f)
+            return jsonify({"count": len(logs)})
+        except:
+            return jsonify({"count": 0})
     
 @app.route("/api/windows", methods=["POST"])
 def receive_windows_health():
