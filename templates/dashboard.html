@@ -343,7 +343,7 @@
       .addEventListener("keypress",e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMessage(); } });
 
     function updateWindowsLogCount() {
-      fetch('/api/windows_log_count')
+      fetch('/api/windows_log')
         .then(r=>r.json())
         .then(d=> document.querySelector('.card2 .card-number').textContent = d.count)
         .catch(console.error);
