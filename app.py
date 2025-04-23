@@ -388,9 +388,12 @@ def receive_windows_logs():
     
 @app.route("/api/windows", methods=["POST"])
 def receive_windows_health():
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid data"}), 400
+    try:
+        data = request.get_json(force=True)
+        if not isinstance(data, dict):
+            return jsonify({"error": "Expected a JSON object"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Failed to parse JSON: {str(e)}"}), 400
 
     try:
         with open("windows_health.json", "r") as f:
