@@ -132,7 +132,7 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http://10.152.48.108:5005/chat"  # Replace with your actual host IP
+    host_chatbot_url = "http://192.168.1.1:5005/chat"  # Replace with your actual host IP
 
     try:
         response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=150)
@@ -346,6 +346,28 @@ def sql_vulnerable_login():
             return render_template('ctf.html', message="Invalid Credentials.")
 
     return render_template('ctf.html', message="")
+
+# ============================
+# NEW WINDOWS LOG APIs
+# ============================
+
+@app.route('/api/windows-health', methods=['POST'])
+def api_windows_health():
+    data = request.get_json()
+    if not isinstance(data, list):
+        return jsonify({"error": "Invalid data format"}), 400
+    with open("windows_health.json", "w") as f:
+        json.dump(data, f, indent=2)
+    return jsonify({"message": "Windows health data received"}), 200
+
+@app.route('/api/windows-events', methods=['POST'])
+def api_windows_events():
+    data = request.get_json()
+    if not isinstance(data, list):
+        return jsonify({"error": "Invalid data format"}), 400
+    with open("windows_events.json", "w") as f:
+        json.dump(data, f, indent=2)
+    return jsonify({"message": "Windows event logs received"}), 200
 
 
 # ============================
