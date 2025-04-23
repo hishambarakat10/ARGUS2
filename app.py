@@ -12,6 +12,8 @@ from sendtodashboard import parse_fast_log
 from datetime import datetime
 import smtplib
 from email.message import EmailMessage
+import threading
+from windows_monitor import collect_windows_metrics, get_log_count
 
 def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
     if not os.path.exists(file_path):
@@ -369,6 +371,12 @@ def api_windows_events():
         json.dump(data, f, indent=2)
     return jsonify({"message": "Windows event logs received"}), 200
 
+# Start the background thread for collecting metrics
+threading.Thread(target=collect_windows_metrics, daemon=True).start()
+
+@app.route('/api/windows_log_count')
+def get_windows_log_api():
+    return jsonify({"count": get_log_count()})
 
 # ============================
 # BACKGROUND LOG MONITORING
