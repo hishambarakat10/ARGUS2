@@ -115,11 +115,16 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
-    """Serves the main HTML dashboard."""
-    with open(os.path.join('windows_health.json')) as f:
+    with open('windows_health.json') as f:
         devices = json.load(f)
+    try:
+        with open('windows_events.json') as f:
+            events = json.load(f)
+        total_events = len(events)
+    except:
+        total_events = 0
     total_devices = len(devices)
-    return render_template('dashboard.html', total_devices=total_devices)
+    return render_template('dashboard.html', total_devices=total_devices, total_events=total_events)
 
 # ============================
 # CHAT API (LangChain + Ollama)
@@ -350,40 +355,46 @@ def sql_vulnerable_login():
 # NEW WINDOWS LOG APIs
 # ============================
 
-@app.route('/api/windows-health', methods=['POST'])
-def api_windows_health():
+@app.route('/api/windows_logs', methods=['POST'])
+def receive_windows_logs():
+    try:
+        data = request.get_json()
+        if not isinstance(data, list):
+            return jsonify({"error": "Expected a list of event logs"}), 400
+
+        try:
+            with open("windows_events.json", "r") as f:
+                existing_logs = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            existing_logs = []
+
+        existing_logs.extend(data)
+
+        with open("windows_events.json", "w") as f:
+            json.dump(existing_logs, f, indent=2)
+
+        return jsonify({"message": "Windows events stored"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/windows", methods=["POST"])
+def receive_windows_health():
     data = request.get_json()
-    if not isinstance(data, list):
-        return jsonify({"error": "Invalid data format"}), 400
-    with open("windows_health.json", "w") as f:
-        json.dump(data, f, indent=2)
-    return jsonify({"message": "Windows health data received"}), 200
-
-# Start the background thread for collecting metrics
-threading.Thread(target=collect_windows_metrics, daemon=True).start()
-
-@app.route('/api/windows_log_count')
-def get_windows_log_api():
-    return jsonify({"count": get_log_count()})
-
-@app.route('/api/windows-events', methods=['POST'])
-def receive_windows_events():
-    data = request.get_json()
-    if not isinstance(data, list):  # Expecting a list of events
-        return jsonify({"error": "Expected a list of events"}), 400
+    if not data:
+        return jsonify({"error": "Invalid data"}), 400
 
     try:
-        with open("windows_events.json", "r") as f:
-            existing = json.load(f)
+        with open("windows_health.json", "r") as f:
+            devices = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        existing = []
+        devices = []
 
-    existing.extend(data)
+    devices.append(data)
 
-    with open("windows_events.json", "w") as f:
-        json.dump(existing, f, indent=2)
+    with open("windows_health.json", "w") as f:
+        json.dump(devices, f, indent=2)
 
-    return jsonify({"message": "Windows events saved"}), 200
+    return jsonify({"message": "Windows health info stored"}), 200
 
 # ============================
 # BACKGROUND LOG MONITORING
