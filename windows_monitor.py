@@ -3,6 +3,10 @@ import psutil
 import socket
 import platform
 import time
+import requests
+import win32evtlog
+import win32api
+import win32con
 from datetime import datetime
 
 log_counter = 0
@@ -53,3 +57,37 @@ def get_log_count():
 
 def get_latest_info():
     return latest_data
+
+def get_security_logs(count=10):
+    server = 'localhost'
+    log_type = 'Security'
+    hand = win32evtlog.OpenEventLog(server, log_type)
+    flags = win32evtlog.EVENTLOG_BACKWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
+    events = win32evtlog.ReadEventLog(hand, flags, 0)
+    logs = []
+
+    for i, event in enumerate(events):
+        if i >= count:
+            break
+        log = {
+            "event_id": str(event.EventID),
+            "time_generated": str(event.TimeGenerated.Format()),
+            "category": str(event.EventCategory),
+            "computer_name": event.ComputerName,
+            "message": event.StringInserts[0] if event.StringInserts else "",
+            "source_ip": "N/A",  # Optional: parse from message
+            "account_name": "N/A",  # Optional: parse from message
+            "priority": "High" if event.EventCategory == 1 else "Low"
+        }
+        logs.append(log)
+    return logs
+
+def send_logs():
+    logs = get_security_logs(5)
+    try:
+        res = requests.post("http://192.168.2.8:5000/api/windows-events", json=logs)
+        print("Status:", res.status_code, res.text)
+    except Exception as e:
+        print("Send failed:", e)
+
+send_logs()
