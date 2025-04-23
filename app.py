@@ -262,12 +262,33 @@ def all_alerts():
     """Serves the main HTML dashboard."""
     return render_template('allalerts.html')
 
-@app.route('/allwindows.html')
+@app.route("/allwindows.html")
 def all_windows():
-    with open('windows_events.json') as f:
-        data = json.load(f)
-    total_events = len(data)
-    return render_template('allwindows.html', all_windows = data)
+    import os, json
+
+    # Load the raw array from disk
+    path = os.path.join(os.getcwd(), "windows_events.json")
+    try:
+        raw = json.load(open(path))
+    except (FileNotFoundError, json.JSONDecodeError):
+        raw = []
+
+    # Normalize into the fields your template uses
+    normalized = []
+    for e in raw:
+        normalized.append({
+            "event_id":       e.get("event_id"),
+            "time_generated": e.get("time_generated"),
+            "category":       e.get("category"),
+            "computer_name":  e.get("computer_name"),
+            "message":        e.get("message"),
+            "source_ip":      e.get("source_ip"),
+            "account_name":   e.get("account_name"),
+            "priority":       e.get("priority")
+        })
+
+    return render_template("allwindows.html",
+                           all_windows=normalized)
 
 @app.route("/alldevices.html")
 def all_devices():
