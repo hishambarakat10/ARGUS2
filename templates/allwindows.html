@@ -26,6 +26,10 @@
     </div>
   </div>
   
+  <p>Loaded {{ all_windows|length }} events.</p>
+<pre style="font-size:12px;">
+  {{ all_windows[0] if all_windows else 'no events yet…' }}
+</pre>
 
   <table id="eventsTable">
       <thead>
