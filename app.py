@@ -13,7 +13,6 @@ from datetime import datetime
 import smtplib
 from email.message import EmailMessage
 import threading
-from windows_monitor import collect_windows_metrics, get_log_count
 
 def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
     if not os.path.exists(file_path):
