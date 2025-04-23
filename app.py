@@ -389,11 +389,12 @@ def receive_windows_logs():
 @app.route("/api/windows", methods=["POST"])
 def receive_windows_health():
     try:
+        # Force JSON parsing and catch bad requests
         data = request.get_json(force=True)
         if not isinstance(data, dict):
-            return jsonify({"error": "Expected a JSON object"}), 400
+            return jsonify({"error": "Expected JSON object, got string or list"}), 400
     except Exception as e:
-        return jsonify({"error": f"Failed to parse JSON: {str(e)}"}), 400
+        return jsonify({"error": f"Bad JSON payload: {str(e)}"}), 400
 
     try:
         with open("windows_health.json", "r") as f:
@@ -401,12 +402,12 @@ def receive_windows_health():
     except (FileNotFoundError, json.JSONDecodeError):
         devices = []
 
-    # Remove existing entry with same device_name
-    devices = [d for d in devices if d.get("device_name") != data.get("device_name")]
-    devices.append(data)
+    # Ensure each item in devices is a dictionary
+    cleaned_devices = [d for d in devices if isinstance(d, dict) and d.get("device_name") != data.get("device_name")]
+    cleaned_devices.append(data)
 
     with open("windows_health.json", "w") as f:
-        json.dump(devices, f, indent=2)
+        json.dump(cleaned_devices, f, indent=2)
 
     return jsonify({"message": "Windows health info stored"}), 200
 
