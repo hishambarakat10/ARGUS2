@@ -119,10 +119,7 @@ def dashboard():
     with open(os.path.join('windows_health.json')) as f:
         devices = json.load(f)
     total_devices = len(devices)
-    with open('windows_events.json') as f:
-        data = json.load(f)
-    total_events = len(data)
-    return render_template('dashboard.html', total_devices=total_devices, total_events=total_events)
+    return render_template('dashboard.html', total_devices=total_devices)
 
 # ============================
 # CHAT API (LangChain + Ollama)
