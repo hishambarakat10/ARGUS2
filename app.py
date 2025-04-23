@@ -366,6 +366,25 @@ threading.Thread(target=collect_windows_metrics, daemon=True).start()
 def get_windows_log_api():
     return jsonify({"count": get_log_count()})
 
+@app.route('/api/windows-events', methods=['POST'])
+def receive_windows_events():
+    data = request.get_json()
+    if not isinstance(data, list):  # Expecting a list of events
+        return jsonify({"error": "Expected a list of events"}), 400
+
+    try:
+        with open("windows_events.json", "r") as f:
+            existing = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing = []
+
+    existing.extend(data)
+
+    with open("windows_events.json", "w") as f:
+        json.dump(existing, f, indent=2)
+
+    return jsonify({"message": "Windows events saved"}), 200
+
 # ============================
 # BACKGROUND LOG MONITORING
 # ============================
