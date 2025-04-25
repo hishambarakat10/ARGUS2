@@ -1,5 +1,0 @@
-# Ignore database files in root and subdirectories
-/users.db
-/ctf.db
-**/users.db
-**/ctf.db
