@@ -10,7 +10,7 @@ app = Flask(__name__)
 llm = OllamaLLM(model="llama3", max_tokens=100)
 
 # 🔌 IP of your VM where Flask is running
-VM_FLASK_API = "http://192.168.56.101:5000"  # Update if needed
+VM_FLASK_API = "http://:5000"  # Update if needed
 
 # Load startup logs from the VM
 def load_startup_logs(file_path="/var/log/suricata/fast.log", count=10):
