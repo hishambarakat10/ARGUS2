@@ -107,6 +107,7 @@ cd ARGUS2
 
 Run Dashboard Backend:
 python3 app.py
+**Make sure to add your VirusTotal API key to Line 31 of the code in the app.py in github then run git pull origin main to update the files in your Ubuntu VM**
 
 Send Logs to Dashboard: Open a new terminal:
 python3 sendtodashboard.py
