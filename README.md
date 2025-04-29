@@ -119,7 +119,7 @@ Step 6: Clone and Run ARGUS
 
 Clone ARGUS repo:
 
-git clone https://github.com/hishambarakat10/ARGUS2.git
+git clone https://github.com/hishambarakat10/ARGUS.git
 
 cd ARGUS2
 
