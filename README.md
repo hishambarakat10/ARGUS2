@@ -24,10 +24,13 @@ Launch VirtualBox after installation.
 
 Step 2: Download Ubuntu ISO
 Get Ubuntu Desktop ISO:
+
 Go to: https://ubuntu.com/download/desktop
+
 Click Download for the latest LTS version (e.g., Ubuntu 22.04 LTS).
 
 Step 3: Create a New VM for Ubuntu
+
 Launch VirtualBox and click New.
 
 Configure VM:
@@ -51,6 +54,7 @@ Storage: Dynamically allocated
 Size: 50 GB recommended
 
 Step 4: Install Ubuntu in VM
+
 Mount ISO:
 
 Select the VM and click Start.
@@ -74,69 +78,99 @@ Set username and password
 Click Restart Now when done
 
 Step 5: Install Suricata on Ubuntu
+
 Update System:
+
 sudo apt update && sudo apt upgrade -y
 
 Install Suricata:
+
 sudo apt install suricata -y
 
 Verify Installation:
+
 suricata --build-info
 
 Configure Suricata:
 
 Find your network interface:
+
 ip a
 
 Edit configuration:
+
 sudo nano /etc/suricata/suricata.yaml
 
 Locate and edit HOME_NET:
+
 HOME_NET: "[192.168.0.0/24]"
+
 (Use your actual network subnet)
 
 Test and Restart Suricata:
+
 sudo suricata -T -c /etc/suricata/suricata.yaml -v
+
 sudo systemctl stop suricata.service
+
 sudo systemctl start suricata.service
 
 Step 6: Clone and Run ARGUS
+
 Clone ARGUS repo:
+
 git clone https://github.com/hishambarakat10/ARGUS2.git
+
 cd ARGUS2
 
 Run Dashboard Backend:
-python3 app.py
+
 **Make sure to add your VirusTotal API key to Line 31 of the code in the app.py in github then run git pull origin main to update the files in your Ubuntu VM**
 
+Run:
+
+python3 app.py
+
 Send Logs to Dashboard: Open a new terminal:
+
 python3 sendtodashboard.py
 
 Step 7: Install Ollama and LLaMA 3
+
 Install Ollama:
+
 curl -fsSL https://ollama.com/install.sh | sh
 
 Pull LLaMA 3 Model:
+
 ollama pull llama3
 
 Start Ollama Server:
+
 ollama serve
 
 Run Model Once to Warm Up:
+
 ollama run llama3
+
 (Then press Ctrl+C)
 
 Start Chatbot API: Open a new terminal:
+
 python3 chatbot_api_1.py
 
 Step 8: Access the Dashboard
+
 Open Firefox or a browser of your choice.
 
 Visit:
+
 http://127.0.0.1:5000
 
 Login with:
+
 Username: admin
+
 Password: admin123
 
 You should now see the full ARGUS AI-Powered IDS Dashboard!
