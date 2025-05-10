@@ -131,7 +131,9 @@ def chat():
             "cpu_health": cpu_health,
             "open_ports": open_ports
         })
-        return jsonify({"response": response})
+        # Convert AIMessage to string
+        response_text = str(response.content) if hasattr(response, 'content') else str(response)
+        return jsonify({"response": response_text})
     except Exception as e:
         return jsonify({"response": f"Chatbot error: {str(e)}"}), 500
 
