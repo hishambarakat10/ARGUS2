@@ -28,11 +28,11 @@ def load_initial_logs(file_path="/var/log/suricata/fast.log", count=10):
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Replace with something secure
-VIRUSTOTAL_API_KEY = ""  # Replace this with your actual key
+VIRUSTOTAL_API_KEY = "111a10aea56259d602d50d583fbe32a130c4a3f1e8fe9b5e258eb2f184e211bf"  # Replace this with your actual key
 socketio = SocketIO(app, cors_allowed_origins="*")
-EMAIL_ADDRESS = ""
-EMAIL_PASSWORD = ""              # Generated via website
-EMAIL_RECEIVER = "" # 
+EMAIL_ADDRESS = "throwawayemail735144@gmail.com"
+EMAIL_PASSWORD = "iifvxgfzitannnsj"              # Generated via website
+EMAIL_RECEIVER = "throwawayemail735144@gmail.com" # 
 
 log_data = []
 classification_counts = {}
@@ -126,7 +126,7 @@ def dashboard():
     return render_template('dashboard.html', total_devices=total_devices, total_events=total_events)
 
 # ============================
-# CHAT API (LangChain + Ollama)
+# CHAT API (LangChain + Gemini)
 # ============================
 
 @app.route("/api/chat", methods=["POST"])
@@ -135,7 +135,7 @@ def chat_with_langchain_bot():
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
-    host_chatbot_url = "http://:5005/chat"  # Replace with your actual host IP
+    host_chatbot_url = "http://127.0.0.1:5005/chat"  # Updated to match Gemini chatbot port
 
     try:
         response = requests.post(host_chatbot_url, json={"message": user_input}, timeout=250)
