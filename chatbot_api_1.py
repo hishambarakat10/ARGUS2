@@ -7,7 +7,12 @@ import re
 app = Flask(__name__)
 
 # Connect to Gemini via LangChain
-llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.2, max_output_tokens=256, google_api_key="AIzaSyCBXXTzMzNkViWV8c96LojxeWUMB1dyE1g")
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    temperature=0.2,
+    max_output_tokens=256,
+    google_api_key="AIzaSyCBXXTzMzNkViWV8c96LojxeWUMB1dyE1g"
+)
 
 # Point to Flask API running on 0.0.0.0 (your VM)
 VM_FLASK_API = "http://127.0.0.1:5000"
@@ -132,7 +137,7 @@ def chat():
 
 if __name__ == "__main__":
     try:
-        print("Warming up LLaMA chatbot with previous fast.log entries...")
+        print("Warming up Gemini chatbot with previous fast.log entries...")
         log_data = load_startup_logs()
         chart_data = get_chart_data()
         cpu_health = get_cpu_health()
